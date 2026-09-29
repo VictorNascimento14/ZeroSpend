@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Check, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import {
@@ -59,6 +59,19 @@ export function SubscriptionActions({
           <MoreHorizontal />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {subscription.status === "review_needed" && (
+            <>
+              <DropdownMenuItem onClick={() => confirmDetection(subscription)}>
+                <Check />
+                Confirmar
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={() => discardDetection(subscription)}>
+                <X />
+                Descartar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem
             onClick={() => {
               setSnapshot(subscription);
@@ -68,11 +81,16 @@ export function SubscriptionActions({
             <Pencil />
             Editar
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
-            <Trash2 />
-            Excluir
-          </DropdownMenuItem>
+          {/* Em revisão, "Descartar" já é o excluir: a detecção estava errada. */}
+          {subscription.status !== "review_needed" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
+                <Trash2 />
+                Excluir
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <DeleteSubscriptionDialog subscription={subscription} open={deleting} onOpenChange={setDeleting} />
@@ -185,4 +203,19 @@ function DeleteSubscriptionDialog({
       </AlertDialogContent>
     </AlertDialog>
   );
+}
+
+/** "Confirmar": quem revisa diz que a detecção é uma assinatura de verdade — ela vira ativa. */
+function confirmDetection(subscription: Subscription) {
+  getRepository().updateSubscription(subscription.id, { status: "active" });
+  toast.success(`Assinatura de ${subscription.vendorName} confirmada.`);
+}
+
+/** "Descartar": a detecção estava errada (compra avulsa, por exemplo) — sai da lista, com desfazer. */
+function discardDetection(subscription: Subscription) {
+  const repository = getRepository();
+  const removed = repository.removeSubscription(subscription.id);
+  toast.success(`Detecção de ${removed.vendorName} descartada.`, {
+    action: { label: "Desfazer", onClick: () => repository.restoreSubscription(removed) },
+  });
 }
