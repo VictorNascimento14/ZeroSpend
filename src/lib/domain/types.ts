@@ -1,17 +1,21 @@
 import type { Category } from "./categories";
 
 /** Moedas de uma assinatura (modelo da especificação). */
-export type Currency = "BRL" | "USD";
+export const CURRENCIES = ["BRL", "USD"] as const;
+export type Currency = (typeof CURRENCIES)[number];
 
-export type BillingCycle = "monthly" | "annually";
+export const BILLING_CYCLES = ["monthly", "annually"] as const;
+export type BillingCycle = (typeof BILLING_CYCLES)[number];
 
 /**
  * O único status gravado. "Ferramenta redundante" e "renova em N dias" são derivados a cada leitura
  * e nunca se gravam.
  */
-export type SubscriptionStatus = "active" | "review_needed" | "cancelled";
+export const SUBSCRIPTION_STATUSES = ["active", "review_needed", "cancelled"] as const;
+export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
 
-export type SubscriptionSource = "email_scan" | "csv_upload" | "manual";
+export const SUBSCRIPTION_SOURCES = ["email_scan", "csv_upload", "manual"] as const;
+export type SubscriptionSource = (typeof SUBSCRIPTION_SOURCES)[number];
 
 /**
  * Data sem hora, `YYYY-MM-DD`. Nunca passe por `new Date("YYYY-MM-DD")`: isso é meia-noite UTC e
