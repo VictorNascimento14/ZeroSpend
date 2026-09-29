@@ -28,6 +28,19 @@ const COLUMNS = {
 } as const;
 
 /**
+ * Os bytes do arquivo como texto. Banco brasileiro costuma exportar em Windows-1252, não UTF-8: lido
+ * como UTF-8, "Descrição" vira "Descri��o" e o cabeçalho não é reconhecido. Tenta UTF-8 estrito e, se
+ * não for, lê como Windows-1252.
+ */
+export function decodeStatement(bytes: ArrayBuffer | Uint8Array): string {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return new TextDecoder("windows-1252").decode(bytes);
+  }
+}
+
+/**
  * Lê o extrato do cartão (CSV) no navegador. Aceita `;` ou `,` como separador (o do cabeçalho),
  * aspas, BOM e `\r\n`. Linha que não dá para ler vira um problema com o motivo — não derruba o resto.
  */

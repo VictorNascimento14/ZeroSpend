@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAmount, parseDate, parseStatement } from "./csv";
+import { decodeStatement, parseAmount, parseDate, parseStatement } from "./csv";
 
 describe("parseStatement", () => {
   it("lê o formato brasileiro: ponto e vírgula, vírgula decimal, BOM, \\r\\n e aspas", () => {
@@ -69,5 +69,15 @@ describe("parseAmount e parseDate", () => {
     expect(parseDate("2026-09-05T10:00:00")).toBe("2026-09-05");
     expect(parseDate("31/02/2026")).toBeNull();
     expect(parseDate("09-05-2026")).toBeNull();
+  });
+});
+
+describe("decodeStatement", () => {
+  it("lê UTF-8 e cai para Windows-1252, o formato comum dos bancos", () => {
+    const utf8 = new TextEncoder().encode("Data;Descrição;Valor\n");
+    const windows1252 = Uint8Array.from([..."Data;Descri"].map((c) => c.charCodeAt(0)).concat([0xe7, 0xe3], [..."o;Valor\n"].map((c) => c.charCodeAt(0))));
+    expect(decodeStatement(utf8)).toBe("Data;Descrição;Valor\n");
+    expect(decodeStatement(windows1252)).toBe("Data;Descrição;Valor\n");
+    expect(parseStatement(decodeStatement(windows1252)).ok).toBe(true);
   });
 });

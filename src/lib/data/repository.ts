@@ -98,6 +98,17 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
     for (const listener of listeners) listener();
   }
 
+  /** Valida todas antes e grava numa operação só: ou entram todas, ou nenhuma. */
+  function addSubscriptions(organizationId: string, drafts: SubscriptionDraft[]): Subscription[] {
+    const database = getDatabase();
+    if (!database.organizations.some((organization) => organization.id === organizationId)) {
+      throw new Error("Empresa não encontrada.");
+    }
+    const created = drafts.map((draft) => stored(newId(), organizationId, checked(draft)));
+    commit({ ...database, subscriptions: [...database.subscriptions, ...created] });
+    return created;
+  }
+
   function findSubscription(id: string): Subscription {
     const found = getDatabase().subscriptions.find((subscription) => subscription.id === id);
     if (!found) throw new Error("Assinatura não encontrada.");
@@ -119,14 +130,11 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
     },
 
     addSubscription(organizationId: string, draft: SubscriptionDraft): Subscription {
-      const database = getDatabase();
-      if (!database.organizations.some((organization) => organization.id === organizationId)) {
-        throw new Error("Empresa não encontrada.");
-      }
-      const created = stored(newId(), organizationId, checked(draft));
-      commit({ ...database, subscriptions: [...database.subscriptions, created] });
-      return created;
+      return addSubscriptions(organizationId, [draft])[0];
     },
+
+    /** Várias de uma vez: a importação do extrato. */
+    addSubscriptions,
 
     updateSubscription(id: string, changes: Partial<SubscriptionDraft>): Subscription {
       const current = findSubscription(id);

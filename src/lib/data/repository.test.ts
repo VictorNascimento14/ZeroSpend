@@ -75,6 +75,20 @@ describe("escrita", () => {
     expect(aviso).toHaveBeenCalledOnce();
   });
 
+  it("grava várias de uma vez, ou nenhuma se uma for inválida", () => {
+    const armazenamento = memoria();
+    const repositorio = createRepository(armazenamento, hoje);
+    const antes = repositorio.getDatabase().subscriptions.length;
+    const aviso = vi.fn();
+    repositorio.subscribe(aviso);
+    const criadas = repositorio.addSubscriptions(empresa, [rascunho, { ...rascunho, vendorName: "Loom" }]);
+    expect(criadas.map((s) => s.vendorName)).toEqual(["Miro", "Loom"]);
+    expect(repositorio.getDatabase().subscriptions).toHaveLength(antes + 2);
+    expect(aviso).toHaveBeenCalledOnce();
+    expect(() => repositorio.addSubscriptions(empresa, [rascunho, { ...rascunho, amount: 0 }])).toThrow(ValidationError);
+    expect(repositorio.getDatabase().subscriptions).toHaveLength(antes + 2);
+  });
+
   it("grava o responsável aparado e deixa de fora o vazio", () => {
     const repositorio = createRepository(memoria(), hoje);
     expect(repositorio.addSubscription(empresa, { ...rascunho, owner: "  Pessoa Exemplo " }).owner).toBe("Pessoa Exemplo");
