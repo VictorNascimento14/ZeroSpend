@@ -47,3 +47,23 @@ export interface Subscription {
   status: SubscriptionStatus;
   source: SubscriptionSource;
 }
+
+export const ROLES = ["admin", "member"] as const;
+export type Role = (typeof ROLES)[number];
+
+export interface User {
+  id: string;
+  name: string;
+  /** Minúsculo e sem espaços nas pontas — é a chave de entrada. */
+  email: string;
+  /** PBKDF2-SHA-256 da senha (hex), com o sal ao lado. Nunca a senha em texto. */
+  passwordHash: string;
+  passwordSalt: string;
+}
+
+/** Quem acessa qual empresa, e com que papel. Uma pessoa pode cuidar de várias (BPO financeiro). */
+export interface Membership {
+  userId: string;
+  organizationId: string;
+  role: Role;
+}

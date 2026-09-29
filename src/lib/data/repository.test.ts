@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { SubscriptionDraft } from "@/lib/domain/validation";
-import { BACKUP_KEY, createRepository, STORAGE_KEY, ValidationError } from "./repository";
-import { DEMO_ORGANIZATION_IDS } from "./seed";
+import { BACKUP_KEY, createRepository, currentSession, STORAGE_KEY, ValidationError } from "./repository";
+import { DEMO_ORGANIZATION_IDS, DEMO_USER_ID } from "./seed";
 
 function memoria(inicial: Record<string, string> = {}) {
   const itens = new Map(Object.entries(inicial));
@@ -30,6 +30,8 @@ describe("leitura", () => {
     const armazenamento = memoria();
     const banco = createRepository(armazenamento, hoje).getDatabase();
     expect(banco.organizations.map((o) => o.name)).toEqual(["Exemplo Tecnologia Ltda", "Clínica Exemplo"]);
+    expect(banco.users.map((u) => u.email)).toEqual(["admin@zerospend.app"]);
+    expect(banco.session).toBeNull();
     expect(JSON.parse(armazenamento.itens.get(STORAGE_KEY)!)).toEqual(banco);
   });
 
@@ -50,7 +52,8 @@ describe("leitura", () => {
 
   it.each([
     ["JSON quebrado", "{nao-e-json"],
-    ["versão desconhecida", JSON.stringify({ version: 2, organizations: [], subscriptions: [] })],
+    ["versão desconhecida", JSON.stringify({ version: 3, organizations: [], subscriptions: [] })],
+    ["formato da v1, sem usuários", JSON.stringify({ version: 1, organizations: [], subscriptions: [] })],
   ])("guarda o conteúdo ilegível (%s) no backup antes de semear", (_, conteudo) => {
     const armazenamento = memoria({ [STORAGE_KEY]: conteudo });
     const banco = createRepository(armazenamento, hoje).getDatabase();
@@ -131,5 +134,33 @@ describe("id de assinatura nova", () => {
     } finally {
       Object.defineProperty(crypto, "randomUUID", { value: randomUUID, configurable: true });
     }
+  });
+});
+
+describe("sessão", () => {
+  it("abre na primeira empresa da pessoa, resolve e fecha", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    expect(currentSession(repositorio.getDatabase())).toBeNull();
+
+    expect(repositorio.startSession(DEMO_USER_ID)).toEqual({ userId: DEMO_USER_ID, organizationId: empresa });
+    const sessao = currentSession(repositorio.getDatabase());
+    expect(sessao?.user.name).toBe("Admin Exemplo");
+    expect(sessao?.organization.name).toBe("Exemplo Tecnologia Ltda");
+    expect(sessao?.role).toBe("admin");
+
+    repositorio.endSession();
+    expect(currentSession(repositorio.getDatabase())).toBeNull();
+  });
+
+  it("recusa abrir sessão para quem não tem empresa", () => {
+    expect(() => createRepository(memoria(), hoje).startSession("ninguem")).toThrow("Esta conta não tem empresa.");
+  });
+
+  it("não resolve sessão que aponta para o que não existe mais", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    repositorio.startSession(DEMO_USER_ID);
+    const banco = repositorio.getDatabase();
+    expect(currentSession({ ...banco, memberships: [] })).toBeNull();
+    expect(currentSession({ ...banco, users: [] })).toBeNull();
   });
 });

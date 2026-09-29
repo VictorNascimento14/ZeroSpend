@@ -1,17 +1,48 @@
-import type { IsoDate, Organization, Subscription } from "@/lib/domain/types";
+import type { IsoDate, Membership, Organization, Role, Subscription, User } from "@/lib/domain/types";
 import { validateSubscriptionDraft, type FieldErrors, type SubscriptionDraft } from "@/lib/domain/validation";
 import { createDemoData } from "./seed";
 
-/** Chave versionada: formato novo ganha chave nova, e a antiga fica para a migração. */
-export const STORAGE_KEY = "zerospend:v1";
+/**
+ * Chave versionada: formato novo ganha chave nova, e a antiga fica intacta. A v1 (sem usuários) nunca
+ * saiu de uma máquina de desenvolvimento, então a v2 começa da demonstração, sem migração.
+ */
+export const STORAGE_KEY = "zerospend:v2";
 
 /** Onde fica o conteúdo que não deu para ler — guardado, em vez de apagado. */
 export const BACKUP_KEY = `${STORAGE_KEY}:backup`;
 
 export interface Database {
-  version: 1;
+  version: 2;
   organizations: Organization[];
   subscriptions: Subscription[];
+  users: User[];
+  memberships: Membership[];
+  /** Quem está usando este navegador e em qual empresa. `null` é ninguém. */
+  session: Session | null;
+}
+
+export interface Session {
+  userId: string;
+  organizationId: string;
+}
+
+/** A sessão resolvida para a tela: a pessoa, a empresa atual e o papel dela ali. */
+export interface CurrentSession {
+  user: User;
+  organization: Organization;
+  role: Role;
+}
+
+/** Resolve a sessão gravada. `null` se não há sessão ou se ela aponta para algo que não existe mais. */
+export function currentSession(database: Database): CurrentSession | null {
+  const { session } = database;
+  if (!session) return null;
+  const user = database.users.find((candidate) => candidate.id === session.userId);
+  const organization = database.organizations.find((candidate) => candidate.id === session.organizationId);
+  const membership = database.memberships.find(
+    (candidate) => candidate.userId === session.userId && candidate.organizationId === session.organizationId,
+  );
+  return user && organization && membership ? { user, organization, role: membership.role } : null;
 }
 
 /** O pedaço do `localStorage` que o repositório usa. Nos testes, um `Map` faz o papel. */
@@ -42,7 +73,7 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
       if (parsed) return parsed;
       storage.setItem(BACKUP_KEY, raw);
     }
-    const demo: Database = { version: 1, ...createDemoData(today()) };
+    const demo: Database = { version: 2, ...createDemoData(today()), session: null };
     storage.setItem(STORAGE_KEY, JSON.stringify(demo));
     return demo;
   }
@@ -96,6 +127,20 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
       return updated;
     },
 
+    /** Abre a sessão na primeira empresa da pessoa. Quem confere a senha é `signIn` (auth.ts). */
+    startSession(userId: string): Session {
+      const database = getDatabase();
+      const membership = database.memberships.find((candidate) => candidate.userId === userId);
+      if (!membership) throw new Error("Esta conta não tem empresa.");
+      const session = { userId, organizationId: membership.organizationId };
+      commit({ ...database, session });
+      return session;
+    },
+
+    endSession(): void {
+      commit({ ...getDatabase(), session: null });
+    },
+
     /** Devolve a assinatura removida, para quem quiser oferecer "desfazer". */
     removeSubscription(id: string): Subscription {
       const removed = findSubscription(id);
@@ -138,7 +183,11 @@ function parse(raw: string): Database | null {
   try {
     const value = JSON.parse(raw) as Partial<Database> | null;
     const valid =
-      value?.version === 1 && Array.isArray(value.organizations) && Array.isArray(value.subscriptions);
+      value?.version === 2 &&
+      Array.isArray(value.organizations) &&
+      Array.isArray(value.subscriptions) &&
+      Array.isArray(value.users) &&
+      Array.isArray(value.memberships);
     return valid ? (value as Database) : null;
   } catch {
     return null;

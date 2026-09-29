@@ -4,10 +4,11 @@ import { totalMonthlySpend } from "@/lib/domain/billing";
 import { isCategory } from "@/lib/domain/categories";
 import { isIsoDate } from "@/lib/domain/dates";
 import { findRedundancies, potentialMonthlySavings } from "@/lib/domain/redundancy";
-import { createDemoData, DEMO_ORGANIZATION_IDS } from "./seed";
+import { hashPassword } from "./password";
+import { createDemoData, DEMO_CREDENTIALS, DEMO_ORGANIZATION_IDS } from "./seed";
 
 const today = "2026-09-29";
-const { organizations, subscriptions } = createDemoData(today);
+const { organizations, subscriptions, users, memberships } = createDemoData(today);
 const daEmpresa = (id: string) => subscriptions.filter((s) => s.organizationId === id);
 
 describe("dados de demonstração", () => {
@@ -65,5 +66,14 @@ describe("dados de demonstração", () => {
     ]);
     expect(potentialMonthlySavings(grupos)).toBeCloseTo(99 * 5.4 + 1199 / 12, 2);
     expect(findRedundancies(daEmpresa(clinica.id), clinica)).toEqual([]);
+  });
+
+  it("dão à conta de demonstração as duas empresas, e o hash guardado bate com a senha divulgada", async () => {
+    const [admin] = users;
+    expect(admin.email).toBe(DEMO_CREDENTIALS.email);
+    expect(memberships.filter((m) => m.userId === admin.id).map((m) => m.organizationId)).toEqual(
+      organizations.map((o) => o.id),
+    );
+    expect(await hashPassword(DEMO_CREDENTIALS.password, admin.passwordSalt)).toBe(admin.passwordHash);
   });
 });
