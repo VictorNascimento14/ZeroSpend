@@ -111,6 +111,17 @@ describe("escrita", () => {
     expect(() => repositorio.updateSubscription("nao-existe", { amount: 1 })).toThrow("Assinatura não encontrada.");
   });
 
+  it("desfaz a exclusão com o mesmo id, uma vez só", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    const removida = repositorio.removeSubscription(`${empresa}-slack`);
+    expect(repositorio.restoreSubscription(removida)).toEqual(removida);
+    expect(repositorio.getDatabase().subscriptions.filter((s) => s.id === removida.id)).toHaveLength(1);
+    expect(() => repositorio.restoreSubscription(removida)).toThrow("Esta assinatura já está na lista.");
+    expect(() => repositorio.restoreSubscription({ ...removida, id: "outro", organizationId: "sumiu" })).toThrow(
+      "Empresa não encontrada.",
+    );
+  });
+
   it("remove e devolve a removida, para o desfazer", () => {
     const repositorio = createRepository(memoria(), hoje);
     const removida = repositorio.removeSubscription(`${empresa}-dropbox`);
