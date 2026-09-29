@@ -20,3 +20,18 @@ export function toIsoDate(instant: Date): IsoDate {
   const day = String(instant.getDate()).padStart(2, "0");
   return `${instant.getFullYear()}-${month}-${day}`;
 }
+
+/**
+ * Soma meses a uma data sem hora. O dia que não existe no mês de destino encosta no último:
+ * 31/01 + 1 mês = 28/02 (29 em ano bissexto).
+ */
+export function addMonths(date: IsoDate, months: number): IsoDate {
+  const [year, month, day] = date.split("-").map(Number);
+  const total = year * 12 + (month - 1) + months;
+  const targetMonth = ((total % 12) + 12) % 12;
+  const targetYear = (total - targetMonth) / 12;
+  const lastDay = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+  const mm = String(targetMonth + 1).padStart(2, "0");
+  const dd = String(Math.min(day, lastDay)).padStart(2, "0");
+  return `${targetYear}-${mm}-${dd}`;
+}

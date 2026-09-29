@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isIsoDate, toIsoDate } from "./dates";
+import { addMonths, isIsoDate, toIsoDate } from "./dates";
 
 describe("fuso dos testes", () => {
   it("roda em São Paulo (UTC−3), onde o bug de data aparece", () => {
@@ -32,5 +32,24 @@ describe("toIsoDate", () => {
 
   it("completa mês e dia com zero", () => {
     expect(toIsoDate(new Date(2026, 0, 9))).toBe("2026-01-09");
+  });
+});
+
+describe("addMonths", () => {
+  it("soma meses e vira o ano", () => {
+    expect(addMonths("2026-10-05", 1)).toBe("2026-11-05");
+    expect(addMonths("2026-12-15", 1)).toBe("2027-01-15");
+    expect(addMonths("2026-10-05", 12)).toBe("2027-10-05");
+  });
+
+  it("encosta no último dia quando o dia não existe no mês de destino", () => {
+    expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonths("2028-01-31", 1)).toBe("2028-02-29");
+    expect(addMonths("2026-03-31", 1)).toBe("2026-04-30");
+    expect(addMonths("2028-02-29", 12)).toBe("2029-02-28");
+  });
+
+  it("aceita meses negativos", () => {
+    expect(addMonths("2026-01-15", -1)).toBe("2025-12-15");
   });
 });
