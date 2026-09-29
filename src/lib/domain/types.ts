@@ -24,6 +24,10 @@ export interface Organization {
   name: string;
   /** Momento da criação, ISO 8601 com hora. */
   createdAt: string;
+  /** Moeda em que a empresa vê os totais. */
+  defaultCurrency: Currency;
+  /** Cotação que a empresa informa: quantos reais vale um dólar. A v1 não busca cotação. */
+  brlPerUsd: number;
 }
 
 export interface Subscription {
