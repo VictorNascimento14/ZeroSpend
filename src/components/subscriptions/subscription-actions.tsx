@@ -206,13 +206,13 @@ function DeleteSubscriptionDialog({
 }
 
 /** "Confirmar": quem revisa diz que a detecção é uma assinatura de verdade — ela vira ativa. */
-function confirmDetection(subscription: Subscription) {
+export function confirmDetection(subscription: Subscription) {
   getRepository().updateSubscription(subscription.id, { status: "active" });
   toast.success(`Assinatura de ${subscription.vendorName} confirmada.`);
 }
 
 /** "Descartar": a detecção estava errada (compra avulsa, por exemplo) — sai da lista, com desfazer. */
-function discardDetection(subscription: Subscription) {
+export function discardDetection(subscription: Subscription) {
   const repository = getRepository();
   const removed = repository.removeSubscription(subscription.id);
   toast.success(`Detecção de ${removed.vendorName} descartada.`, {

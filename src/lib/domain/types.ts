@@ -72,3 +72,13 @@ export interface Membership {
   organizationId: string;
   role: Role;
 }
+
+/**
+ * Um alerta que a empresa já tratou e dispensou. A chave identifica a situação (ver `currentAlerts`):
+ * quando ela muda, o alerta volta.
+ */
+export interface AlertDismissal {
+  organizationId: string;
+  key: string;
+  dismissedAt: IsoDate;
+}
