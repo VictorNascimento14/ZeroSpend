@@ -1,6 +1,7 @@
 import { monthlyAmountIn, nextChargeDate } from "@/lib/domain/billing";
 import { CATEGORIES, type Category } from "@/lib/domain/categories";
 import { daysBetween } from "@/lib/domain/dates";
+import { normalizeText as normalize } from "@/lib/domain/text";
 import { findRedundancies, redundantIds } from "@/lib/domain/redundancy";
 import type { IsoDate, Organization, Subscription, SubscriptionStatus } from "@/lib/domain/types";
 
@@ -46,11 +47,6 @@ export interface RowFilters {
   query: string;
   status: StatusFilter;
   category: Category | "all";
-}
-
-/** Busca sem diferenciar acento nem maiúscula: "clinica" acha "Clínica". */
-export function normalize(value: string): string {
-  return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
 /** Aplica busca (software, categoria, responsável), status e categoria. */
