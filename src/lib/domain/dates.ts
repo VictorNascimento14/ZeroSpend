@@ -31,7 +31,17 @@ export function addMonths(date: IsoDate, months: number): IsoDate {
   const targetMonth = ((total % 12) + 12) % 12;
   const targetYear = (total - targetMonth) / 12;
   const lastDay = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
-  const mm = String(targetMonth + 1).padStart(2, "0");
-  const dd = String(Math.min(day, lastDay)).padStart(2, "0");
-  return `${targetYear}-${mm}-${dd}`;
+  return fromUtc(new Date(Date.UTC(targetYear, targetMonth, Math.min(day, lastDay))));
+}
+
+/** Soma dias a uma data sem hora (negativo volta). A conta é em UTC: sem horário de verão no caminho. */
+export function addDays(date: IsoDate, days: number): IsoDate {
+  const [year, month, day] = date.split("-").map(Number);
+  return fromUtc(new Date(Date.UTC(year, month - 1, day + days)));
+}
+
+function fromUtc(utc: Date): IsoDate {
+  const month = String(utc.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(utc.getUTCDate()).padStart(2, "0");
+  return `${utc.getUTCFullYear()}-${month}-${day}`;
 }

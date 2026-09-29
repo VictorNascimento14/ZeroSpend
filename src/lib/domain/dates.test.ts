@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, isIsoDate, toIsoDate } from "./dates";
+import { addDays, addMonths, isIsoDate, toIsoDate } from "./dates";
 
 describe("fuso dos testes", () => {
   it("roda em São Paulo (UTC−3), onde o bug de data aparece", () => {
@@ -51,5 +51,14 @@ describe("addMonths", () => {
 
   it("aceita meses negativos", () => {
     expect(addMonths("2026-01-15", -1)).toBe("2025-12-15");
+  });
+});
+
+describe("addDays", () => {
+  it("soma e subtrai dias, virando mês e ano", () => {
+    expect(addDays("2026-09-29", 5)).toBe("2026-10-04");
+    expect(addDays("2026-12-30", 3)).toBe("2027-01-02");
+    expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
+    expect(addDays("2028-02-28", 1)).toBe("2028-02-29");
   });
 });
