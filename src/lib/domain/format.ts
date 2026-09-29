@@ -16,6 +16,13 @@ export function formatDate(date: IsoDate): string {
   return `${day}/${month}/${year}`;
 }
 
+/** "hoje", "amanhã", "em 5 dias" — a distância até uma cobrança, como a tela fala. */
+export function formatDaysUntil(days: number): string {
+  if (days === 0) return "hoje";
+  if (days === 1) return "amanhã";
+  return `em ${days} dias`;
+}
+
 export const BILLING_CYCLE_LABELS: Record<BillingCycle, string> = {
   monthly: "Mensal",
   annually: "Anual",

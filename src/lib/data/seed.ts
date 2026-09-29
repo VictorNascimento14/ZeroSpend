@@ -33,7 +33,7 @@ const TECNOLOGIA: DemoSubscription[] = [
   { vendorName: "Gupy", category: "hr", amount: 7800, currency: "BRL", billingCycle: "annually", inDays: 120, status: "active", source: "manual" },
   { vendorName: "1Password", category: "security", amount: 239.4, currency: "USD", billingCycle: "annually", inDays: 200, status: "active", source: "email_scan" },
   { vendorName: "Dropbox", category: "storage", amount: 119, currency: "BRL", billingCycle: "monthly", inDays: 8, status: "cancelled", source: "csv_upload" },
-  { vendorName: "ChatGPT Team", category: "other", amount: 60, currency: "USD", billingCycle: "monthly", inDays: 6, status: "review_needed", source: "csv_upload" },
+  { vendorName: "ChatGPT Team", category: "other", amount: 60, currency: "USD", billingCycle: "monthly", inDays: 10, status: "review_needed", source: "csv_upload" },
   { vendorName: "Adobe Acrobat Pro", category: "other", amount: 85, currency: "BRL", billingCycle: "monthly", inDays: 25, status: "review_needed", source: "csv_upload" },
 ];
 

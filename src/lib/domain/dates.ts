@@ -40,6 +40,16 @@ export function addDays(date: IsoDate, days: number): IsoDate {
   return fromUtc(new Date(Date.UTC(year, month - 1, day + days)));
 }
 
+/** Dias de `from` até `to` (negativo se `to` vem antes). Conta em UTC, sem hora no caminho. */
+export function daysBetween(from: IsoDate, to: IsoDate): number {
+  return (utcMs(to) - utcMs(from)) / 86_400_000;
+}
+
+function utcMs(date: IsoDate): number {
+  const [year, month, day] = date.split("-").map(Number);
+  return Date.UTC(year, month - 1, day);
+}
+
 function fromUtc(utc: Date): IsoDate {
   const month = String(utc.getUTCMonth() + 1).padStart(2, "0");
   const day = String(utc.getUTCDate()).padStart(2, "0");

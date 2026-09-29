@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatMoney } from "./format";
+import { formatDate, formatDaysUntil, formatMoney } from "./format";
 
 // O Intl separa o símbolo do número com espaço não separável (U+00A0), não com espaço comum.
 const nbsp = " ";
@@ -23,5 +23,13 @@ describe("formatDate", () => {
   it("mostra dia/mês/ano sem passar por Date", () => {
     expect(formatDate("2026-10-05")).toBe("05/10/2026");
     expect(formatDate("2027-01-31")).toBe("31/01/2027");
+  });
+});
+
+describe("formatDaysUntil", () => {
+  it("fala como gente: hoje, amanhã, em N dias", () => {
+    expect(formatDaysUntil(0)).toBe("hoje");
+    expect(formatDaysUntil(1)).toBe("amanhã");
+    expect(formatDaysUntil(5)).toBe("em 5 dias");
   });
 });
