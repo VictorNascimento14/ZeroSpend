@@ -164,3 +164,40 @@ describe("sessão", () => {
     expect(currentSession({ ...banco, users: [] })).toBeNull();
   });
 });
+
+describe("empresas da sessão", () => {
+  it("lista as empresas da pessoa em ordem alfabética", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    repositorio.startSession(DEMO_USER_ID);
+    expect(currentSession(repositorio.getDatabase())?.organizations.map((o) => o.name)).toEqual([
+      "Clínica Exemplo",
+      "Exemplo Tecnologia Ltda",
+    ]);
+  });
+
+  it("troca de empresa só para uma em que a pessoa tem vínculo", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    expect(() => repositorio.selectOrganization(DEMO_ORGANIZATION_IDS.clinica)).toThrow("Ninguém entrou.");
+    repositorio.startSession(DEMO_USER_ID);
+    repositorio.selectOrganization(DEMO_ORGANIZATION_IDS.clinica);
+    expect(currentSession(repositorio.getDatabase())?.organization.name).toBe("Clínica Exemplo");
+    expect(() => repositorio.selectOrganization("org-de-outra-pessoa")).toThrow("Você não tem acesso a esta empresa.");
+  });
+
+  it("cria empresa nova com vínculo de administração e entra nela", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    repositorio.startSession(DEMO_USER_ID);
+    const nova = repositorio.addOrganization("  Exemplo Filial  ", new Date("2026-09-29T15:00:00Z"));
+    expect(nova).toMatchObject({ name: "Exemplo Filial", defaultCurrency: "BRL", brlPerUsd: 5.4 });
+    const sessao = currentSession(repositorio.getDatabase());
+    expect(sessao?.organization.id).toBe(nova.id);
+    expect(sessao?.role).toBe("admin");
+    expect(sessao?.organizations).toHaveLength(3);
+  });
+
+  it("recusa empresa sem nome, no campo do nome", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    repositorio.startSession(DEMO_USER_ID);
+    expect(() => repositorio.addOrganization("   ")).toThrow(ValidationError);
+  });
+});

@@ -1,3 +1,4 @@
+import { DEFAULT_BRL_PER_USD } from "@/lib/domain/billing";
 import type { IsoDate, Membership, Organization, Role, Subscription, User } from "@/lib/domain/types";
 import { validateSubscriptionDraft, type FieldErrors, type SubscriptionDraft } from "@/lib/domain/validation";
 import { createDemoData } from "./seed";
@@ -26,11 +27,13 @@ export interface Session {
   organizationId: string;
 }
 
-/** A sessão resolvida para a tela: a pessoa, a empresa atual e o papel dela ali. */
+/** A sessão resolvida para a tela: a pessoa, a empresa atual, o papel ali e as empresas dela. */
 export interface CurrentSession {
   user: User;
   organization: Organization;
   role: Role;
+  /** Todas as empresas em que a pessoa tem vínculo, em ordem alfabética (o seletor do header). */
+  organizations: Organization[];
 }
 
 /** Resolve a sessão gravada. `null` se não há sessão ou se ela aponta para algo que não existe mais. */
@@ -42,7 +45,12 @@ export function currentSession(database: Database): CurrentSession | null {
   const membership = database.memberships.find(
     (candidate) => candidate.userId === session.userId && candidate.organizationId === session.organizationId,
   );
-  return user && organization && membership ? { user, organization, role: membership.role } : null;
+  if (!user || !organization || !membership) return null;
+  const organizations = database.memberships
+    .filter((candidate) => candidate.userId === user.id)
+    .flatMap((candidate) => database.organizations.filter((org) => org.id === candidate.organizationId))
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  return { user, organization, role: membership.role, organizations };
 }
 
 /** O pedaço do `localStorage` que o repositório usa. Nos testes, um `Map` faz o papel. */
@@ -161,6 +169,43 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
 
     endSession(): void {
       commit({ ...getDatabase(), session: null });
+    },
+
+    /** Troca a empresa da sessão — só para uma em que a pessoa tem vínculo. */
+    selectOrganization(organizationId: string): void {
+      const database = getDatabase();
+      const { session } = database;
+      if (!session) throw new Error("Ninguém entrou.");
+      const allowed = database.memberships.some(
+        (candidate) => candidate.userId === session.userId && candidate.organizationId === organizationId,
+      );
+      if (!allowed) throw new Error("Você não tem acesso a esta empresa.");
+      commit({ ...database, session: { ...session, organizationId } });
+    },
+
+    /**
+     * Empresa nova para quem está na sessão: em real, com a cotação inicial, vínculo de administração —
+     * e a sessão passa para ela.
+     */
+    addOrganization(name: string, now = new Date()): Organization {
+      const database = getDatabase();
+      const { session } = database;
+      if (!session) throw new Error("Ninguém entrou.");
+      if (!name.trim()) throw new ValidationError<{ name: string }>({ name: "Informe o nome da empresa." });
+      const organization: Organization = {
+        id: newId(),
+        name: name.trim(),
+        createdAt: now.toISOString(),
+        defaultCurrency: "BRL",
+        brlPerUsd: DEFAULT_BRL_PER_USD,
+      };
+      commit({
+        ...database,
+        organizations: [...database.organizations, organization],
+        memberships: [...database.memberships, { userId: session.userId, organizationId: organization.id, role: "admin" }],
+        session: { ...session, organizationId: organization.id },
+      });
+      return organization;
     },
 
     /** Devolve a assinatura removida, para quem quiser oferecer "desfazer". */
