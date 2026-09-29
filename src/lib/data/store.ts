@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { toIsoDate } from "@/lib/domain/dates";
+import type { Subscription } from "@/lib/domain/types";
 import {
   createRepository,
   currentSession,
@@ -41,4 +42,15 @@ export function useDatabase(): Database | null {
 export function useSession(): CurrentSession | null {
   const database = useDatabase();
   return useMemo(() => (database ? currentSession(database) : null), [database]);
+}
+
+/** A empresa da sessão e as assinaturas dela — o que as telas do app mostram. `null` sem sessão. */
+export function useOrganizationData(): { session: CurrentSession; subscriptions: Subscription[] } | null {
+  const database = useDatabase();
+  return useMemo(() => {
+    const session = database ? currentSession(database) : null;
+    if (!database || !session) return null;
+    const subscriptions = database.subscriptions.filter((s) => s.organizationId === session.organization.id);
+    return { session, subscriptions };
+  }, [database]);
 }

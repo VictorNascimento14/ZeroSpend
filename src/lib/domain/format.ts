@@ -23,6 +23,14 @@ export function formatDaysUntil(days: number): string {
   return `em ${days} dias`;
 }
 
+/**
+ * "1 ferramenta", "2 ferramentas", "0 ferramentas". Não usa `Intl.PluralRules`: no português do
+ * Brasil ele trata o zero como singular ("0 ferramenta").
+ */
+export function plural(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count === 1 ? singular : pluralForm}`;
+}
+
 export const BILLING_CYCLE_LABELS: Record<BillingCycle, string> = {
   monthly: "Mensal",
   annually: "Anual",
