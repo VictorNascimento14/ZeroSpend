@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Brand } from "./brand";
 import { GlobalSearch } from "./global-search";
 import { NavLinks } from "./nav-links";
+import { NotificationsMenu } from "./notifications-menu";
 import { OrganizationSwitcher } from "./organization-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
@@ -33,6 +34,7 @@ export function AppHeader() {
       <OrganizationSwitcher />
       <div className="ml-auto flex shrink-0 items-center gap-1">
         <GlobalSearch />
+        <NotificationsMenu />
         <ThemeToggle />
         <UserMenu />
       </div>
