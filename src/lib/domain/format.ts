@@ -31,6 +31,13 @@ export function plural(count: number, singular: string, pluralForm: string): str
   return `${count} ${count === 1 ? singular : pluralForm}`;
 }
 
+const listFormatter = new Intl.ListFormat("pt-BR", { type: "conjunction" });
+
+/** "Figma e Canva", "Figma, Canva e Miro". */
+export function formatList(items: string[]): string {
+  return listFormatter.format(items);
+}
+
 export const BILLING_CYCLE_LABELS: Record<BillingCycle, string> = {
   monthly: "Mensal",
   annually: "Anual",

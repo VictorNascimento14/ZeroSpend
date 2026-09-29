@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatDaysUntil, formatMoney, plural } from "./format";
+import { formatDate, formatDaysUntil, formatList, formatMoney, plural } from "./format";
 
 // O Intl separa o símbolo do número com espaço não separável (U+00A0), não com espaço comum.
 const nbsp = " ";
@@ -39,5 +39,13 @@ describe("plural", () => {
     expect(plural(1, "ferramenta", "ferramentas")).toBe("1 ferramenta");
     expect(plural(0, "ferramenta", "ferramentas")).toBe("0 ferramentas");
     expect(plural(3, "ferramenta", "ferramentas")).toBe("3 ferramentas");
+  });
+});
+
+describe("formatList", () => {
+  it("junta nomes com vírgula e \"e\", em português", () => {
+    expect(formatList(["Figma"])).toBe("Figma");
+    expect(formatList(["HubSpot", "Pipedrive"])).toBe("HubSpot e Pipedrive");
+    expect(formatList(["Figma", "Canva", "Miro"])).toBe("Figma, Canva e Miro");
   });
 });
