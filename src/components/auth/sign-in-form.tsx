@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,12 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
           </Button>
           <p className="text-center text-xs text-muted-foreground">
             Ou use {DEMO_CREDENTIALS.email} com a senha &quot;{DEMO_CREDENTIALS.password}&quot;.
+          </p>
+          <p className="text-center text-sm text-muted-foreground">
+            Não tem conta?{" "}
+            <Link href="/criar-conta" className="font-medium text-primary underline-offset-4 hover:underline">
+              Criar conta
+            </Link>
           </p>
         </CardFooter>
       </Card>

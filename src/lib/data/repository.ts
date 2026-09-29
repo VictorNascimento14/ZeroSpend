@@ -48,9 +48,10 @@ export function currentSession(database: Database): CurrentSession | null {
 /** O pedaço do `localStorage` que o repositório usa. Nos testes, um `Map` faz o papel. */
 export type KeyValueStorage = Pick<Storage, "getItem" | "setItem">;
 
-export class ValidationError extends Error {
-  constructor(readonly fields: FieldErrors<SubscriptionDraft>) {
-    super("Há campos inválidos na assinatura.");
+/** Erro de formulário: uma mensagem por campo, pronta para a tela. */
+export class ValidationError<T = SubscriptionDraft> extends Error {
+  constructor(readonly fields: FieldErrors<T>) {
+    super("Há campos inválidos.");
     this.name = "ValidationError";
   }
 }
@@ -127,6 +128,27 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
       return updated;
     },
 
+    /**
+     * Conta nova: pessoa, empresa, vínculo de administração e a sessão aberta na empresa — tudo numa
+     * gravação. Quem valida e faz o hash da senha é `createAccount` (auth.ts); aqui, a unicidade do
+     * e-mail é conferida de novo, perto da gravação.
+     */
+    addAccount(user: User, organization: Organization): Session {
+      const database = getDatabase();
+      if (database.users.some((candidate) => candidate.email === user.email)) {
+        throw new ValidationError<{ email: string }>({ email: EMAIL_TAKEN });
+      }
+      const session = { userId: user.id, organizationId: organization.id };
+      commit({
+        ...database,
+        users: [...database.users, user],
+        organizations: [...database.organizations, organization],
+        memberships: [...database.memberships, { userId: user.id, organizationId: organization.id, role: "admin" }],
+        session,
+      });
+      return session;
+    },
+
     /** Abre a sessão na primeira empresa da pessoa. Quem confere a senha é `signIn` (auth.ts). */
     startSession(userId: string): Session {
       const database = getDatabase();
@@ -151,8 +173,10 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
   };
 }
 
+export const EMAIL_TAKEN = "Já existe uma conta com este e-mail.";
+
 /** `randomUUID` só existe em contexto seguro (https ou localhost) — pelo IP da rede local, não. */
-function newId(): string {
+export function newId(): string {
   if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
   return Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
 }
