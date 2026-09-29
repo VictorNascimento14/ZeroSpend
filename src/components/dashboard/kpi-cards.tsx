@@ -8,12 +8,14 @@ import { formatDaysUntil, formatMoney, plural } from "@/lib/domain/format";
 import { computeKpis } from "@/lib/domain/kpis";
 import { cn } from "@/lib/utils";
 
-// Cor de estado do kit por card, em classes literais (classe montada em runtime não gera CSS).
+// A cor do ícone de cada card, pelo nome da família do kit, em classes literais (classe montada em
+// runtime não gera CSS).
 const TONES = {
-  spend: "bg-cerulean-tint-50 text-cerulean-shade-100 dark:bg-cerulean-shade-300 dark:text-cerulean-tint-200",
-  savings: "bg-success-tint-50 text-success-shade-200 dark:bg-success-shade-300 dark:text-success-tint-200",
-  active: "bg-plum-tint-50 text-plum-shade-100 dark:bg-plum-shade-300 dark:text-plum-tint-200",
-  renewals: "bg-warning-tint-50 text-warning-shade-300 dark:bg-warning-shade-300 dark:text-warning-tint-200",
+  cerulean: "bg-cerulean-tint-50 text-cerulean-shade-100 dark:bg-cerulean-shade-300 dark:text-cerulean-tint-200",
+  raspberry: "bg-raspberry-tint-50 text-raspberry-shade-100 dark:bg-raspberry-shade-300 dark:text-raspberry-tint-200",
+  plum: "bg-plum-tint-50 text-plum-shade-100 dark:bg-plum-shade-300 dark:text-plum-tint-200",
+  success: "bg-success-tint-50 text-success-shade-200 dark:bg-success-shade-300 dark:text-success-tint-200",
+  warning: "bg-warning-tint-50 text-warning-shade-300 dark:bg-warning-shade-300 dark:text-warning-tint-200",
 } as const;
 
 /** Os quatro indicadores do topo do dashboard, da empresa da sessão. */
@@ -28,7 +30,7 @@ export function KpiCards() {
   return (
     <section aria-label="Indicadores" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <Kpi
-        tone="spend"
+        tone="cerulean"
         icon={Wallet}
         title="Gasto mensal"
         value={money(kpis.monthlySpend)}
@@ -39,7 +41,7 @@ export function KpiCards() {
         }
       />
       <Kpi
-        tone="savings"
+        tone="success"
         icon={PiggyBank}
         title="Economia potencial"
         value={money(kpis.potentialSavings)}
@@ -50,14 +52,14 @@ export function KpiCards() {
         }
       />
       <Kpi
-        tone="active"
+        tone="plum"
         icon={Layers}
         title="Assinaturas ativas"
         value={String(kpis.activeCount)}
         caption={kpis.reviewCount > 0 ? `E ${kpis.reviewCount} em revisão` : "Nenhuma em revisão"}
       />
       <Kpi
-        tone="renewals"
+        tone="warning"
         icon={BellRing}
         title={`Renovações em ${kpis.leadDays} dias`}
         value={String(kpis.renewals.length)}
@@ -71,7 +73,8 @@ export function KpiCards() {
   );
 }
 
-function Kpi({
+/** Um indicador: título, número grande, legenda e o ícone na cor do kit. */
+export function Kpi({
   tone,
   icon: Icon,
   title,
