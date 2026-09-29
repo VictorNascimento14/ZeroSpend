@@ -49,7 +49,7 @@ export interface RowFilters {
 }
 
 /** Busca sem diferenciar acento nem maiúscula: "clinica" acha "Clínica". */
-function normalize(value: string): string {
+export function normalize(value: string): string {
   return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 

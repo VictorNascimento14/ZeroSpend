@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Brand } from "./brand";
+import { GlobalSearch } from "./global-search";
 import { NavLinks } from "./nav-links";
 import { OrganizationSwitcher } from "./organization-switcher";
 import { ThemeToggle } from "./theme-toggle";
@@ -31,6 +32,7 @@ export function AppHeader() {
       </Sheet>
       <OrganizationSwitcher />
       <div className="ml-auto flex shrink-0 items-center gap-1">
+        <GlobalSearch />
         <ThemeToggle />
         <UserMenu />
       </div>

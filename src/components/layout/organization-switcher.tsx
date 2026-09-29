@@ -39,7 +39,7 @@ export function OrganizationSwitcher() {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" className="min-w-0 max-w-64 justify-start px-2" />}>
+        <DropdownMenuTrigger render={<Button variant="ghost" className="min-w-0 max-w-64 shrink justify-start px-2" />}>
           <Building2 className="shrink-0" />
           <span className="sr-only">Empresa:</span>
           <span className="truncate">{organization.name}</span>
