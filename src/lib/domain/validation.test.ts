@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { validateAccountDraft, validateSubscriptionDraft, type SubscriptionDraft } from "./validation";
+import {
+  validateAccountDraft,
+  validateOrganizationDraft,
+  validateSubscriptionDraft,
+  type SubscriptionDraft,
+} from "./validation";
 
 const valido: SubscriptionDraft = {
   vendorName: "Slack",
@@ -76,5 +81,22 @@ describe("validateAccountDraft", () => {
       password: "A senha precisa de pelo menos 8 caracteres.",
       organizationName: "Informe o nome da empresa.",
     });
+  });
+});
+
+describe("validateOrganizationDraft", () => {
+  it("aceita nome, moeda conhecida e cotação positiva", () => {
+    expect(validateOrganizationDraft({ name: "Exemplo Tecnologia Ltda", defaultCurrency: "USD", brlPerUsd: 5.4 })).toEqual({});
+  });
+
+  it("recusa nome vazio, moeda desconhecida e cotação fora da faixa, com o erro de cada campo", () => {
+    expect(validateOrganizationDraft({ name: "  ", defaultCurrency: "EUR" as never, brlPerUsd: Number.NaN })).toEqual({
+      name: "Informe o nome da empresa.",
+      defaultCurrency: "Escolha a moeda padrão.",
+      brlPerUsd: "Informe quantos reais vale um dólar, entre R$ 0,01 e R$ 100,00.",
+    });
+    // O "540" digitado sem a vírgula multiplicaria o dólar por 100.
+    expect(validateOrganizationDraft({ name: "A", defaultCurrency: "BRL", brlPerUsd: 540 })).toHaveProperty("brlPerUsd");
+    expect(validateOrganizationDraft({ name: "A", defaultCurrency: "BRL", brlPerUsd: 0 })).toHaveProperty("brlPerUsd");
   });
 });
