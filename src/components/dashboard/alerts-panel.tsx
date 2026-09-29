@@ -3,23 +3,18 @@
 import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { AlertItem } from "@/components/alerts/alert-item";
+import { useAlerts } from "@/components/alerts/use-alerts";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrganizationData } from "@/lib/data/store";
-import { currentAlerts } from "@/lib/domain/alerts";
-import { toIsoDate } from "@/lib/domain/dates";
 
 /**
  * O painel lateral do dashboard: os alertas que a empresa ainda não dispensou — renovações dentro da
  * antecedência (da mais próxima) e duplicidades (da maior economia). Tratar é na central de alertas.
  */
 export function AlertsPanel({ className }: { className?: string }) {
-  const data = useOrganizationData();
-  if (!data) return null;
-  const { organization } = data.session;
-  const alerts = currentAlerts(data.subscriptions, organization, toIsoDate(new Date())).filter(
-    (alert) => !data.dismissedAlertKeys.has(alert.key),
-  );
+  const view = useAlerts();
+  if (!view) return null;
+  const { organization, open: alerts } = view;
 
   return (
     <Card className={className}>

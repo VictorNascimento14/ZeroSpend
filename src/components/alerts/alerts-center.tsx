@@ -2,37 +2,32 @@
 
 import { CircleCheck } from "lucide-react";
 import type { ReactNode } from "react";
-import { toast } from "sonner";
 import { confirmDetection, discardDetection } from "@/components/subscriptions/subscription-actions";
 import { VendorAvatar } from "@/components/subscriptions/vendor-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getRepository, useOrganizationData } from "@/lib/data/store";
-import { currentAlerts, DEFAULT_RENEWAL_LEAD_DAYS, type Alert } from "@/lib/domain/alerts";
-import { toIsoDate } from "@/lib/domain/dates";
+import { getRepository } from "@/lib/data/store";
+import { DEFAULT_RENEWAL_LEAD_DAYS, type Alert } from "@/lib/domain/alerts";
 import { formatMoney, plural, SOURCE_LABELS } from "@/lib/domain/format";
-import type { Organization } from "@/lib/domain/types";
+import { dismissWithUndo } from "./alert-actions";
 import { AlertItem, describeAlert } from "./alert-item";
+import { useAlerts } from "./use-alerts";
 
 /**
  * A central de alertas da empresa: renovações e duplicidades, que se dispensam quando já foram
  * tratadas, e as assinaturas em revisão, que se resolvem confirmando ou descartando.
  */
 export function AlertsCenter() {
-  const data = useOrganizationData();
-  if (!data) return null;
-  const { organization } = data.session;
-  const alerts = currentAlerts(data.subscriptions, organization, toIsoDate(new Date()));
-  const open = alerts.filter((alert) => !data.dismissedAlertKeys.has(alert.key));
-  const dismissed = alerts.filter((alert) => data.dismissedAlertKeys.has(alert.key));
-  const inReview = data.subscriptions.filter((subscription) => subscription.status === "review_needed");
+  const view = useAlerts();
+  if (!view) return null;
+  const { organization, open, dismissed, inReview } = view;
 
   const dismissButton = (alert: Alert) => (
     <Button
       variant="outline"
       size="sm"
       aria-label={`Dispensar: ${describeAlert(alert, organization).title}`}
-      onClick={() => dismiss(organization, alert)}
+      onClick={() => dismissWithUndo(organization.id, alert)}
     >
       Dispensar
     </Button>
@@ -120,14 +115,6 @@ export function AlertsCenter() {
       )}
     </div>
   );
-}
-
-function dismiss(organization: Organization, alert: Alert) {
-  const repository = getRepository();
-  repository.dismissAlert(organization.id, alert.key);
-  toast.success("Alerta dispensado.", {
-    action: { label: "Desfazer", onClick: () => repository.restoreAlert(organization.id, alert.key) },
-  });
 }
 
 function Section({
