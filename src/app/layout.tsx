@@ -8,7 +8,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "ZeroSpend",
+  title: { default: "ZeroSpend", template: "%s · ZeroSpend" },
   description:
     "Gerenciador e auditor de assinaturas de software para pequenas e médias empresas.",
 };
