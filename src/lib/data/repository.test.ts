@@ -42,6 +42,18 @@ describe("leitura", () => {
     expect(outro.subscriptions.some((s) => s.vendorName === "Miro")).toBe(true);
   });
 
+  it("lê o gravado antes de existirem as dispensas, sem semear de novo", () => {
+    const armazenamento = memoria();
+    createRepository(armazenamento, hoje).addSubscription(empresa, rascunho);
+    const gravado = JSON.parse(armazenamento.itens.get(STORAGE_KEY)!);
+    delete gravado.dismissals;
+    armazenamento.setItem(STORAGE_KEY, JSON.stringify(gravado));
+    const banco = createRepository(armazenamento, hoje).getDatabase();
+    expect(banco.subscriptions.some((s) => s.vendorName === "Miro")).toBe(true);
+    expect(banco.dismissals).toEqual([]);
+    expect(armazenamento.itens.has(BACKUP_KEY)).toBe(false);
+  });
+
   it("devolve a mesma referência até alguém gravar (exigência do useSyncExternalStore)", () => {
     const repositorio = createRepository(memoria(), hoje);
     const antes = repositorio.getDatabase();
@@ -152,6 +164,25 @@ describe("escrita", () => {
     };
     expect(() => repositorio.addSubscription(empresa, rascunho)).toThrow("cota cheia");
     expect(repositorio.getDatabase()).toBe(antes);
+  });
+});
+
+describe("alertas dispensados", () => {
+  it("dispensa uma vez só, com a data, e volta a mostrar", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    repositorio.dismissAlert(empresa, "renovacao:x:2026-10-02");
+    repositorio.dismissAlert(empresa, "renovacao:x:2026-10-02");
+    expect(repositorio.getDatabase().dismissals).toEqual([
+      { organizationId: empresa, key: "renovacao:x:2026-10-02", dismissedAt: "2026-09-29" },
+    ]);
+    repositorio.restoreAlert(empresa, "renovacao:x:2026-10-02");
+    expect(repositorio.getDatabase().dismissals).toEqual([]);
+  });
+
+  it("recusa empresa que não existe e alerta sem chave", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    expect(() => repositorio.dismissAlert("org-que-nao-existe", "x")).toThrow("Empresa não encontrada.");
+    expect(() => repositorio.dismissAlert(empresa, "  ")).toThrow("Alerta sem identificação.");
   });
 });
 

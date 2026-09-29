@@ -44,13 +44,24 @@ export function useSession(): CurrentSession | null {
   return useMemo(() => (database ? currentSession(database) : null), [database]);
 }
 
-/** A empresa da sessão e as assinaturas dela — o que as telas do app mostram. `null` sem sessão. */
-export function useOrganizationData(): { session: CurrentSession; subscriptions: Subscription[] } | null {
+export interface OrganizationData {
+  session: CurrentSession;
+  subscriptions: Subscription[];
+  /** As chaves dos alertas que a empresa dispensou. */
+  dismissedAlertKeys: Set<string>;
+}
+
+/** A empresa da sessão e o que é dela — o que as telas do app mostram. `null` sem sessão. */
+export function useOrganizationData(): OrganizationData | null {
   const database = useDatabase();
   return useMemo(() => {
     const session = database ? currentSession(database) : null;
     if (!database || !session) return null;
-    const subscriptions = database.subscriptions.filter((s) => s.organizationId === session.organization.id);
-    return { session, subscriptions };
+    const organizationId = session.organization.id;
+    const subscriptions = database.subscriptions.filter((s) => s.organizationId === organizationId);
+    const dismissedAlertKeys = new Set(
+      database.dismissals.filter((d) => d.organizationId === organizationId).map((d) => d.key),
+    );
+    return { session, subscriptions, dismissedAlertKeys };
   }, [database]);
 }

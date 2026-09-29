@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_RENEWAL_LEAD_DAYS, renewalAlerts } from "./alerts";
-import type { Subscription } from "./types";
+import { currentAlerts, DEFAULT_RENEWAL_LEAD_DAYS, renewalAlerts } from "./alerts";
+import type { Organization, Subscription } from "./types";
 
 const hoje = "2026-09-29";
 
@@ -58,5 +58,30 @@ describe("renewalAlerts", () => {
     const assinaturas = [assinatura("em-2", "2026-10-01"), assinatura("em-5", "2026-10-04")];
     expect(renewalAlerts(assinaturas, hoje, 3).map((a) => a.subscription.id)).toEqual(["em-2"]);
     expect(DEFAULT_RENEWAL_LEAD_DAYS).toBe(7);
+  });
+});
+
+describe("currentAlerts", () => {
+  const empresa: Organization = {
+    id: "org-1",
+    name: "Empresa",
+    createdAt: "2026-01-01T12:00:00.000Z",
+    defaultCurrency: "BRL",
+    brlPerUsd: 5.4,
+  };
+
+  it("dá a cada situação uma chave: a renovação leva a data, e a duplicidade, quem está no grupo", () => {
+    const zoom = assinatura("zoom", "2026-10-02", { category: "meetings", amount: 80 });
+    const meet = assinatura("meet", "2026-11-20", { category: "meetings", amount: 50 });
+    expect(currentAlerts([zoom, meet], empresa, hoje).map((alerta) => alerta.key)).toEqual([
+      "renovacao:zoom:2026-10-02",
+      "redundancia:meetings:meet,zoom",
+    ]);
+    // Um mês depois, a cobrança é outra; e uma terceira ferramenta na categoria muda o grupo.
+    const loom = assinatura("loom", "2026-12-01", { category: "meetings", amount: 30 });
+    expect(currentAlerts([zoom, meet, loom], empresa, "2026-10-29").map((alerta) => alerta.key)).toEqual([
+      "renovacao:zoom:2026-11-02",
+      "redundancia:meetings:loom,meet,zoom",
+    ]);
   });
 });

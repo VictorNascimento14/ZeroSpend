@@ -1,5 +1,5 @@
 import { DEFAULT_BRL_PER_USD } from "@/lib/domain/billing";
-import type { IsoDate, Membership, Organization, Role, Subscription, User } from "@/lib/domain/types";
+import type { AlertDismissal, IsoDate, Membership, Organization, Role, Subscription, User } from "@/lib/domain/types";
 import { validateSubscriptionDraft, type FieldErrors, type SubscriptionDraft } from "@/lib/domain/validation";
 import { createDemoData } from "./seed";
 
@@ -18,6 +18,8 @@ export interface Database {
   subscriptions: Subscription[];
   users: User[];
   memberships: Membership[];
+  /** Os alertas que cada empresa dispensou. Campo novo com padrão na leitura: falta = nenhum. */
+  dismissals: AlertDismissal[];
   /** Quem está usando este navegador e em qual empresa. `null` é ninguém. */
   session: Session | null;
 }
@@ -82,7 +84,7 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
       if (parsed) return parsed;
       storage.setItem(BACKUP_KEY, raw);
     }
-    const demo: Database = { version: 2, ...createDemoData(today()), session: null };
+    const demo: Database = { version: 2, ...createDemoData(today()), dismissals: [], session: null };
     storage.setItem(STORAGE_KEY, JSON.stringify(demo));
     return demo;
   }
@@ -234,6 +236,26 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
     },
 
     /** Devolve a assinatura removida, para quem quiser oferecer "desfazer". */
+    /** Dispensa um alerta da empresa. Dispensar de novo não muda nada. */
+    dismissAlert(organizationId: string, key: string): void {
+      const database = getDatabase();
+      if (!database.organizations.some((organization) => organization.id === organizationId)) {
+        throw new Error("Empresa não encontrada.");
+      }
+      if (!key.trim()) throw new Error("Alerta sem identificação.");
+      if (database.dismissals.some((d) => d.organizationId === organizationId && d.key === key)) return;
+      // ponytail: as dispensas se acumulam (uma linha curta por alerta tratado — anos cabem no
+      // localStorage). Com o backend, viram tabela com limpeza das situações que já passaram.
+      commit({ ...database, dismissals: [...database.dismissals, { organizationId, key, dismissedAt: today() }] });
+    },
+
+    /** Volta a mostrar um alerta dispensado (o "desfazer" e o "voltar a mostrar"). */
+    restoreAlert(organizationId: string, key: string): void {
+      const database = getDatabase();
+      const dismissals = database.dismissals.filter((d) => !(d.organizationId === organizationId && d.key === key));
+      if (dismissals.length !== database.dismissals.length) commit({ ...database, dismissals });
+    },
+
     removeSubscription(id: string): Subscription {
       const removed = findSubscription(id);
       const database = getDatabase();
@@ -283,7 +305,9 @@ function parse(raw: string): Database | null {
       Array.isArray(value.subscriptions) &&
       Array.isArray(value.users) &&
       Array.isArray(value.memberships);
-    return valid ? (value as Database) : null;
+    if (!valid) return null;
+    // Campo que chegou depois da versão 2 entra com o padrão: o que já estava gravado continua valendo.
+    return { ...(value as Database), dismissals: Array.isArray(value.dismissals) ? value.dismissals : [] };
   } catch {
     return null;
   }
