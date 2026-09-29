@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renewalAlerts } from "@/lib/domain/alerts";
+import { computeKpis } from "@/lib/domain/kpis";
 import { totalMonthlySpend } from "@/lib/domain/billing";
 import { isCategory } from "@/lib/domain/categories";
 import { isIsoDate } from "@/lib/domain/dates";
@@ -75,5 +76,14 @@ describe("dados de demonstração", () => {
       organizations.map((o) => o.id),
     );
     expect(await hashPassword(DEMO_CREDENTIALS.password, admin.passwordSalt)).toBe(admin.passwordHash);
+  });
+
+  it("dão os KPIs do dashboard da Exemplo Tecnologia", () => {
+    const tecnologia = organizations.find((o) => o.id === DEMO_ORGANIZATION_IDS.tecnologia)!;
+    const kpis = computeKpis(daEmpresa(tecnologia.id), tecnologia, today);
+    expect(kpis.monthlySpend).toBeCloseTo(7444.75, 2);
+    expect(kpis.potentialSavings).toBeCloseTo(634.52, 2);
+    expect(kpis).toMatchObject({ convertedCurrency: true, redundantToCut: 2, activeCount: 12, reviewCount: 2 });
+    expect(kpis.renewals[0]).toMatchObject({ daysUntil: 2, subscription: { vendorName: "GitHub" } });
   });
 });

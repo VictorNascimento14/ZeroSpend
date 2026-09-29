@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatDaysUntil, formatMoney } from "./format";
+import { formatDate, formatDaysUntil, formatMoney, plural } from "./format";
 
 // O Intl separa o símbolo do número com espaço não separável (U+00A0), não com espaço comum.
 const nbsp = " ";
@@ -31,5 +31,13 @@ describe("formatDaysUntil", () => {
     expect(formatDaysUntil(0)).toBe("hoje");
     expect(formatDaysUntil(1)).toBe("amanhã");
     expect(formatDaysUntil(5)).toBe("em 5 dias");
+  });
+});
+
+describe("plural", () => {
+  it("usa o singular só para um, e o plural para zero e para mais", () => {
+    expect(plural(1, "ferramenta", "ferramentas")).toBe("1 ferramenta");
+    expect(plural(0, "ferramenta", "ferramentas")).toBe("0 ferramentas");
+    expect(plural(3, "ferramenta", "ferramentas")).toBe("3 ferramentas");
   });
 });
