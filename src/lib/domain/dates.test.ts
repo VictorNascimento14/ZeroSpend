@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, addMonths, isIsoDate, toIsoDate } from "./dates";
+import { addDays, addMonths, daysBetween, isIsoDate, toIsoDate } from "./dates";
 
 describe("fuso dos testes", () => {
   it("roda em São Paulo (UTC−3), onde o bug de data aparece", () => {
@@ -60,5 +60,14 @@ describe("addDays", () => {
     expect(addDays("2026-12-30", 3)).toBe("2027-01-02");
     expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
     expect(addDays("2028-02-28", 1)).toBe("2028-02-29");
+  });
+});
+
+describe("daysBetween", () => {
+  it("conta dias corridos entre duas datas sem hora", () => {
+    expect(daysBetween("2026-09-29", "2026-09-29")).toBe(0);
+    expect(daysBetween("2026-09-29", "2026-10-04")).toBe(5);
+    expect(daysBetween("2026-12-30", "2027-01-02")).toBe(3);
+    expect(daysBetween("2026-10-04", "2026-09-29")).toBe(-5);
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { renewalAlerts } from "@/lib/domain/alerts";
 import { totalMonthlySpend } from "@/lib/domain/billing";
 import { isCategory } from "@/lib/domain/categories";
 import { isIsoDate } from "@/lib/domain/dates";
@@ -38,6 +39,15 @@ describe("dados de demonstração", () => {
     }
     const repetidas = [...porCategoria].filter(([, n]) => n > 1).map(([c]) => c);
     expect(repetidas.sort()).toEqual(["crm", "design"]);
+  });
+
+  it("dão três alertas de renovação na Exemplo Tecnologia, como no briefing", () => {
+    const alertas = renewalAlerts(daEmpresa(DEMO_ORGANIZATION_IDS.tecnologia), today);
+    expect(alertas.map((a) => [a.subscription.vendorName, a.daysUntil])).toEqual([
+      ["GitHub", 2],
+      ["Google Workspace", 3],
+      ["Zoom", 5],
+    ]);
   });
 
   it("dão um gasto mensal conhecido na Exemplo Tecnologia (cotação de R$ 5,40)", () => {
