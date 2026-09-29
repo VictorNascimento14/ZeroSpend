@@ -3,6 +3,7 @@ import { renewalAlerts } from "@/lib/domain/alerts";
 import { totalMonthlySpend } from "@/lib/domain/billing";
 import { isCategory } from "@/lib/domain/categories";
 import { isIsoDate } from "@/lib/domain/dates";
+import { findRedundancies, potentialMonthlySavings } from "@/lib/domain/redundancy";
 import { createDemoData, DEMO_ORGANIZATION_IDS } from "./seed";
 
 const today = "2026-09-29";
@@ -53,5 +54,16 @@ describe("dados de demonstração", () => {
   it("dão um gasto mensal conhecido na Exemplo Tecnologia (cotação de R$ 5,40)", () => {
     const tecnologia = organizations.find((o) => o.id === DEMO_ORGANIZATION_IDS.tecnologia)!;
     expect(totalMonthlySpend(daEmpresa(tecnologia.id), tecnologia)).toBeCloseTo(7444.75, 2);
+  });
+
+  it("dão duas redundâncias na Exemplo Tecnologia e nenhuma na Clínica Exemplo", () => {
+    const [tecnologia, clinica] = organizations;
+    const grupos = findRedundancies(daEmpresa(tecnologia.id), tecnologia);
+    expect(grupos.map((g) => [g.category, g.subscriptions.map((s) => s.vendorName)])).toEqual([
+      ["crm", ["HubSpot", "Pipedrive"]],
+      ["design", ["Figma", "Canva"]],
+    ]);
+    expect(potentialMonthlySavings(grupos)).toBeCloseTo(99 * 5.4 + 1199 / 12, 2);
+    expect(findRedundancies(daEmpresa(clinica.id), clinica)).toEqual([]);
   });
 });
