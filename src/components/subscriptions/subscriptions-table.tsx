@@ -26,7 +26,7 @@ export function SubscriptionsTable() {
         <CardDescription>
           {rows.length > 0
             ? `${plural(rows.length, "assinatura", "assinaturas")}, da próxima cobrança para a mais distante.`
-            : "Nenhuma assinatura cadastrada nesta empresa."}
+            : "Nenhuma assinatura cadastrada nesta empresa. Use \u201cNova assinatura\u201d para cadastrar a primeira."}
         </CardDescription>
       </CardHeader>
       {rows.length > 0 && (

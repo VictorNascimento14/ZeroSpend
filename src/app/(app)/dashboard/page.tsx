@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AlertsPanel } from "@/components/dashboard/alerts-panel";
 import { KpiCards } from "@/components/dashboard/kpi-cards";
 import { PageHeader } from "@/components/layout/page-header";
+import { NewSubscriptionButton } from "@/components/subscriptions/new-subscription-button";
 import { SubscriptionsTable } from "@/components/subscriptions/subscriptions-table";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -9,7 +10,11 @@ export const metadata: Metadata = { title: "Dashboard" };
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <PageHeader title="Dashboard" description="Gasto mensal, economia potencial e as renovações que vêm aí." />
+      <PageHeader
+        title="Dashboard"
+        description="Gasto mensal, economia potencial e as renovações que vêm aí."
+        actions={<NewSubscriptionButton />}
+      />
       <KpiCards />
       {/*
         O painel fica ao lado da tabela só a partir de 1600px: a tabela pede ~860px, e abaixo disso ela
