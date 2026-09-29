@@ -1,8 +1,18 @@
 "use client";
 
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,6 +27,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ValidationError } from "@/lib/data/repository";
@@ -38,6 +49,7 @@ export function SubscriptionActions({
   // O diálogo trabalha sobre a assinatura como estava ao abrir: se ela mudasse durante a animação de
   // saída, os campos receberiam valores iniciais novos depois de montados (o Base UI avisa).
   const [snapshot, setSnapshot] = useState(subscription);
+  const [deleting, setDeleting] = useState(false);
   return (
     <>
       <DropdownMenu>
@@ -56,8 +68,14 @@ export function SubscriptionActions({
             <Pencil />
             Editar
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
+            <Trash2 />
+            Excluir
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <DeleteSubscriptionDialog subscription={subscription} open={deleting} onOpenChange={setDeleting} />
       <EditSubscriptionDialog
         subscription={snapshot}
         defaultCurrency={defaultCurrency}
@@ -117,5 +135,54 @@ function EditSubscriptionDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Confirma a exclusão e, depois, oferece "Desfazer" no aviso: a assinatura volta com o mesmo id. */
+function DeleteSubscriptionDialog({
+  subscription,
+  open,
+  onOpenChange,
+}: {
+  subscription: Subscription;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  function confirm() {
+    const repository = getRepository();
+    const removed = repository.removeSubscription(subscription.id);
+    onOpenChange(false);
+    toast.success(`Assinatura de ${removed.vendorName} excluída.`, {
+      action: {
+        label: "Desfazer",
+        onClick: () => {
+          try {
+            repository.restoreSubscription(removed);
+            toast.success(`Assinatura de ${removed.vendorName} de volta.`);
+          } catch (reason) {
+            toast.error(reason instanceof Error ? reason.message : "Não foi possível desfazer.");
+          }
+        },
+      },
+    });
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir a assinatura de {subscription.vendorName}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Ela sai da tabela, do gasto mensal e dos alertas. Logo depois, dá para desfazer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={confirm}>
+            Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

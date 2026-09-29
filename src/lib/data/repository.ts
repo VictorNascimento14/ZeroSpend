@@ -208,6 +208,23 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
       return organization;
     },
 
+    /**
+     * O "desfazer" da exclusão: devolve a assinatura com o mesmo id. Valida de novo e recusa se a
+     * empresa sumiu ou se o id já voltou (dois cliques em "Desfazer").
+     */
+    restoreSubscription(subscription: Subscription): Subscription {
+      const database = getDatabase();
+      if (!database.organizations.some((organization) => organization.id === subscription.organizationId)) {
+        throw new Error("Empresa não encontrada.");
+      }
+      if (database.subscriptions.some((candidate) => candidate.id === subscription.id)) {
+        throw new Error("Esta assinatura já está na lista.");
+      }
+      const restored = stored(subscription.id, subscription.organizationId, checked(subscription));
+      commit({ ...database, subscriptions: [...database.subscriptions, restored] });
+      return restored;
+    },
+
     /** Devolve a assinatura removida, para quem quiser oferecer "desfazer". */
     removeSubscription(id: string): Subscription {
       const removed = findSubscription(id);
