@@ -245,6 +245,7 @@ function stored(id: string, organizationId: string, draft: SubscriptionDraft): S
     nextBillingDate: draft.nextBillingDate,
     status: draft.status,
     source: draft.source,
+    ...(draft.owner?.trim() ? { owner: draft.owner.trim() } : {}),
   };
 }
 

@@ -14,6 +14,9 @@ export type SubscriptionDraft = Omit<Subscription, "id" | "organizationId">;
 /** Um erro por campo, com a mensagem que a tela mostra. Objeto vazio é válido. */
 export type FieldErrors<T> = Partial<Record<keyof T, string>>;
 
+/** Tamanho máximo do responsável: um nome, não um texto. */
+export const OWNER_MAX = 80;
+
 function isOneOf<T extends string>(list: readonly T[], value: unknown): value is T {
   return (list as readonly unknown[]).includes(value);
 }
@@ -34,6 +37,9 @@ export function validateSubscriptionDraft(draft: SubscriptionDraft): FieldErrors
   if (!isIsoDate(draft.nextBillingDate)) errors.nextBillingDate = "Informe uma data válida.";
   if (!isOneOf(SUBSCRIPTION_STATUSES, draft.status)) errors.status = "Status desconhecido.";
   if (!isOneOf(SUBSCRIPTION_SOURCES, draft.source)) errors.source = "Origem desconhecida.";
+  if (draft.owner !== undefined && (typeof draft.owner !== "string" || draft.owner.trim().length > OWNER_MAX)) {
+    errors.owner = `Use até ${OWNER_MAX} caracteres.`;
+  }
   return errors;
 }
 

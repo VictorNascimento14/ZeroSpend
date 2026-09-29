@@ -75,6 +75,12 @@ describe("escrita", () => {
     expect(aviso).toHaveBeenCalledOnce();
   });
 
+  it("grava o responsável aparado e deixa de fora o vazio", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    expect(repositorio.addSubscription(empresa, { ...rascunho, owner: "  Pessoa Exemplo " }).owner).toBe("Pessoa Exemplo");
+    expect(repositorio.addSubscription(empresa, { ...rascunho, owner: "   " })).not.toHaveProperty("owner");
+  });
+
   it("recusa cadastro inválido com o erro de cada campo, sem gravar", () => {
     const armazenamento = memoria();
     const repositorio = createRepository(armazenamento, hoje);

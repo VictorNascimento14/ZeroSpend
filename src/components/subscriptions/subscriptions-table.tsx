@@ -10,6 +10,7 @@ import { BILLING_CYCLE_LABELS, formatDate, formatDaysUntil, formatMoney, plural 
 import type { Organization } from "@/lib/domain/types";
 import { buildRows, type SubscriptionRow } from "./rows";
 import { RedundantBadge, StatusBadge } from "./status-badge";
+import { SubscriptionActions } from "./subscription-actions";
 import { VendorAvatar } from "./vendor-avatar";
 
 /** A tabela principal do dashboard: todas as assinaturas da empresa da sessão. */
@@ -40,6 +41,9 @@ export function SubscriptionsTable() {
                 <TableHead>Ciclo</TableHead>
                 <TableHead>Próxima cobrança</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>
+                  <span className="sr-only">Ações</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -62,7 +66,12 @@ function SubscriptionTableRow({ row, organization }: { row: SubscriptionRow; org
       <TableCell>
         <span className="flex items-center gap-3">
           <VendorAvatar name={subscription.vendorName} />
-          <span className="font-medium">{subscription.vendorName}</span>
+          <span>
+            <span className="block font-medium">{subscription.vendorName}</span>
+            {subscription.owner && (
+              <span className="block text-xs text-muted-foreground">Resp.: {subscription.owner}</span>
+            )}
+          </span>
         </span>
       </TableCell>
       <TableCell>{CATEGORIES[subscription.category]}</TableCell>
@@ -95,6 +104,9 @@ function SubscriptionTableRow({ row, organization }: { row: SubscriptionRow; org
           <StatusBadge status={subscription.status} />
           {redundant && <RedundantBadge />}
         </span>
+      </TableCell>
+      <TableCell className="text-right">
+        <SubscriptionActions subscription={subscription} defaultCurrency={organization.defaultCurrency} />
       </TableCell>
     </TableRow>
   );

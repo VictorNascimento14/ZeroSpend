@@ -30,6 +30,7 @@ describe("readSubscriptionForm", () => {
       nextBillingDate: "2026-10-20",
       status: "active",
       source: "manual",
+      owner: "",
     });
     expect(validateSubscriptionDraft(rascunho)).toEqual({});
   });
@@ -45,5 +46,13 @@ describe("readSubscriptionForm", () => {
       "nextBillingDate",
       "vendorName",
     ]);
+  });
+
+  it("na edição, lê o status e o responsável do formulário e mantém a origem", () => {
+    const rascunho = readSubscriptionForm(formulario({ status: "cancelled", owner: " Pessoa Exemplo " }), {
+      status: "active",
+      source: "csv_upload",
+    });
+    expect(rascunho).toMatchObject({ status: "cancelled", owner: "Pessoa Exemplo", source: "csv_upload" });
   });
 });

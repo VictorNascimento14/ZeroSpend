@@ -17,14 +17,14 @@ export default function DashboardPage() {
       />
       <KpiCards />
       {/*
-        O painel fica ao lado da tabela só a partir de 1600px: a tabela pede ~860px, e abaixo disso ela
-        seria cortada. Empilhado, o painel vem antes — alerta é o que pede atenção primeiro.
+        O painel fica ao lado da tabela só a partir de 1700px: a tabela pede ~900px (medido), e abaixo
+        disso ela seria cortada. Empilhado, o painel vem antes — alerta é o que pede atenção primeiro.
       */}
-      <div className="grid items-start gap-6 min-[1600px]:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-6 min-[1700px]:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">
           <SubscriptionsTable />
         </div>
-        <AlertsPanel className="order-first min-[1600px]:order-none" />
+        <AlertsPanel className="order-first min-[1700px]:order-none" />
       </div>
     </div>
   );
