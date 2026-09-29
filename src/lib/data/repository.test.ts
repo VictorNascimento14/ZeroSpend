@@ -54,6 +54,20 @@ describe("leitura", () => {
     expect(armazenamento.itens.has(BACKUP_KEY)).toBe(false);
   });
 
+  it("lê a empresa gravada antes das preferências de alerta com o padrão", () => {
+    const armazenamento = memoria();
+    createRepository(armazenamento, hoje).getDatabase();
+    const gravado = JSON.parse(armazenamento.itens.get(STORAGE_KEY)!);
+    for (const organizacao of gravado.organizations) {
+      delete organizacao.renewalLeadDays;
+      delete organizacao.alertChannels;
+    }
+    armazenamento.setItem(STORAGE_KEY, JSON.stringify(gravado));
+    const banco = createRepository(armazenamento, hoje).getDatabase();
+    expect(banco.organizations[0]).toMatchObject({ renewalLeadDays: 7, alertChannels: { email: true, whatsapp: false } });
+    expect(armazenamento.itens.has(BACKUP_KEY)).toBe(false);
+  });
+
   it("devolve a mesma referência até alguém gravar (exigência do useSyncExternalStore)", () => {
     const repositorio = createRepository(memoria(), hoje);
     const antes = repositorio.getDatabase();
@@ -185,6 +199,18 @@ describe("dados da empresa", () => {
     expect(() => repositorio.updateOrganization(empresa, { ...dados, brlPerUsd: 0 })).toThrow(ValidationError);
     expect(() => repositorio.updateOrganization("org-que-nao-existe", dados)).toThrow("Empresa não encontrada.");
     expect(repositorio.getDatabase().organizations.find((o) => o.id === empresa)?.name).toBe("Exemplo Tecnologia Ltda");
+  });
+});
+
+describe("preferências de alerta", () => {
+  it("muda antecedência e canais para quem administra, e recusa o resto", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    const preferencias = { renewalLeadDays: 30, alertChannels: { email: false, whatsapp: true } };
+    expect(() => repositorio.updateAlertSettings(empresa, preferencias)).toThrow("Só quem administra a empresa altera estes dados.");
+    repositorio.startSession(DEMO_USER_ID);
+    expect(repositorio.updateAlertSettings(empresa, preferencias)).toMatchObject(preferencias);
+    expect(() => repositorio.updateAlertSettings(empresa, { ...preferencias, renewalLeadDays: 10 })).toThrow(ValidationError);
+    expect(repositorio.getDatabase().organizations.find((o) => o.id === empresa)?.renewalLeadDays).toBe(30);
   });
 });
 

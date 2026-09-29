@@ -1,7 +1,6 @@
 "use client";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DEFAULT_RENEWAL_LEAD_DAYS } from "@/lib/domain/alerts";
 import { CATEGORIES } from "@/lib/domain/categories";
 import { BILLING_CYCLE_LABELS, formatDate, formatDaysUntil, formatMoney } from "@/lib/domain/format";
 import type { Organization } from "@/lib/domain/types";
@@ -67,7 +66,7 @@ function SubscriptionTableRow({ row, organization }: { row: SubscriptionRow; org
         {chargeDate ? (
           <>
             {formatDate(chargeDate)}
-            {daysUntil !== null && daysUntil <= DEFAULT_RENEWAL_LEAD_DAYS && (
+            {daysUntil !== null && daysUntil <= organization.renewalLeadDays && (
               <span className="block text-xs text-warning-shade-300 dark:text-warning-tint-200">
                 {formatDaysUntil(daysUntil)}
               </span>

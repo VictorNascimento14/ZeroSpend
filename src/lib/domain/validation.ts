@@ -1,3 +1,4 @@
+import { RENEWAL_LEAD_OPTIONS, type AlertSettings } from "./alerts";
 import { isCategory } from "./categories";
 import { isIsoDate } from "./dates";
 import {
@@ -109,5 +110,15 @@ export function validateOrganizationDraft(draft: OrganizationDraft): FieldErrors
   if (!Number.isFinite(draft.brlPerUsd) || draft.brlPerUsd <= 0 || draft.brlPerUsd > BRL_PER_USD_MAX) {
     errors.brlPerUsd = "Informe quantos reais vale um dólar, entre R$ 0,01 e R$ 100,00.";
   }
+  return errors;
+}
+
+export function validateAlertSettings(draft: AlertSettings): FieldErrors<AlertSettings> {
+  const errors: FieldErrors<AlertSettings> = {};
+  if (!(RENEWAL_LEAD_OPTIONS as readonly number[]).includes(draft.renewalLeadDays)) {
+    errors.renewalLeadDays = "Escolha a antecedência.";
+  }
+  const { email, whatsapp } = draft.alertChannels ?? {};
+  if (typeof email !== "boolean" || typeof whatsapp !== "boolean") errors.alertChannels = "Escolha os canais.";
   return errors;
 }

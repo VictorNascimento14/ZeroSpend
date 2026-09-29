@@ -1,3 +1,4 @@
+import { defaultAlertSettings } from "@/lib/domain/alerts";
 import { DEFAULT_BRL_PER_USD } from "@/lib/domain/billing";
 import type { Organization, User } from "@/lib/domain/types";
 import { validateAccountDraft, type AccountDraft } from "@/lib/domain/validation";
@@ -59,6 +60,7 @@ export async function createAccount(repository: Repository, draft: AccountDraft,
     createdAt: now.toISOString(),
     defaultCurrency: "BRL",
     brlPerUsd: DEFAULT_BRL_PER_USD,
+    ...defaultAlertSettings(),
   };
   return repository.addAccount(user, organization);
 }

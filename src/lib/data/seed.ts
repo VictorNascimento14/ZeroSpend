@@ -1,3 +1,4 @@
+import { defaultAlertSettings } from "@/lib/domain/alerts";
 import { DEFAULT_BRL_PER_USD } from "@/lib/domain/billing";
 import { addDays } from "@/lib/domain/dates";
 import type { IsoDate, Membership, Organization, Subscription, User } from "@/lib/domain/types";
@@ -65,8 +66,22 @@ export function createDemoData(today: IsoDate): DemoData {
   const createdAt = `${addDays(today, -90)}T12:00:00.000Z`;
   return {
     organizations: [
-      { id: DEMO_ORGANIZATION_IDS.tecnologia, name: "Exemplo Tecnologia Ltda", createdAt, defaultCurrency: "BRL", brlPerUsd: DEFAULT_BRL_PER_USD },
-      { id: DEMO_ORGANIZATION_IDS.clinica, name: "Clínica Exemplo", createdAt, defaultCurrency: "BRL", brlPerUsd: DEFAULT_BRL_PER_USD },
+      {
+        id: DEMO_ORGANIZATION_IDS.tecnologia,
+        name: "Exemplo Tecnologia Ltda",
+        createdAt,
+        defaultCurrency: "BRL",
+        brlPerUsd: DEFAULT_BRL_PER_USD,
+        ...defaultAlertSettings(),
+      },
+      {
+        id: DEMO_ORGANIZATION_IDS.clinica,
+        name: "Clínica Exemplo",
+        createdAt,
+        defaultCurrency: "BRL",
+        brlPerUsd: DEFAULT_BRL_PER_USD,
+        ...defaultAlertSettings(),
+      },
     ],
     subscriptions: [
       ...toSubscriptions(DEMO_ORGANIZATION_IDS.tecnologia, TECNOLOGIA, today),

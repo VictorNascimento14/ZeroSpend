@@ -1,4 +1,4 @@
-import { DEFAULT_RENEWAL_LEAD_DAYS, renewalAlerts, type RenewalAlert } from "./alerts";
+import { renewalAlerts, type RenewalAlert } from "./alerts";
 import { totalMonthlySpend } from "./billing";
 import { findRedundancies, potentialMonthlySavings } from "./redundancy";
 import type { IsoDate, Organization, Subscription } from "./types";
@@ -14,17 +14,13 @@ export interface Kpis {
   redundantToCut: number;
   activeCount: number;
   reviewCount: number;
-  /** Renovações dentro da antecedência, da mais próxima para a mais distante. */
+  /** Renovações dentro da antecedência da empresa, da mais próxima para a mais distante. */
   renewals: RenewalAlert[];
   leadDays: number;
 }
 
-export function computeKpis(
-  subscriptions: Subscription[],
-  organization: Organization,
-  today: IsoDate,
-  leadDays: number = DEFAULT_RENEWAL_LEAD_DAYS,
-): Kpis {
+export function computeKpis(subscriptions: Subscription[], organization: Organization, today: IsoDate): Kpis {
+  const leadDays = organization.renewalLeadDays;
   const counted = subscriptions.filter((subscription) => subscription.status !== "cancelled");
   const groups = findRedundancies(subscriptions, organization);
   return {

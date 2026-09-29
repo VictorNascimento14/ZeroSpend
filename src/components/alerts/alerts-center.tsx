@@ -7,7 +7,7 @@ import { VendorAvatar } from "@/components/subscriptions/vendor-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getRepository } from "@/lib/data/store";
-import { DEFAULT_RENEWAL_LEAD_DAYS, type Alert } from "@/lib/domain/alerts";
+import type { Alert } from "@/lib/domain/alerts";
 import { formatMoney, plural, SOURCE_LABELS } from "@/lib/domain/format";
 import { dismissWithUndo } from "./alert-actions";
 import { AlertItem, describeAlert } from "./alert-item";
@@ -36,9 +36,9 @@ export function AlertsCenter() {
   return (
     <div className="grid max-w-4xl gap-6">
       <Section
-        title={`Renovações nos próximos ${DEFAULT_RENEWAL_LEAD_DAYS} dias`}
+        title={`Renovações nos próximos ${organization.renewalLeadDays} dias`}
         description="Da mais próxima para a mais distante. Dispense a que já está prevista: ela volta na cobrança seguinte."
-        empty={`Nenhuma renovação nos próximos ${DEFAULT_RENEWAL_LEAD_DAYS} dias.`}
+        empty={`Nenhuma renovação nos próximos ${organization.renewalLeadDays} dias.`}
       >
         {open
           .filter((alert) => alert.kind === "renewal")

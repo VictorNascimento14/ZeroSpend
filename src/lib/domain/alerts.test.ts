@@ -68,6 +68,8 @@ describe("currentAlerts", () => {
     createdAt: "2026-01-01T12:00:00.000Z",
     defaultCurrency: "BRL",
     brlPerUsd: 5.4,
+    renewalLeadDays: 7,
+    alertChannels: { email: true, whatsapp: false },
   };
 
   it("dá a cada situação uma chave: a renovação leva a data, e a duplicidade, quem está no grupo", () => {
@@ -83,5 +85,21 @@ describe("currentAlerts", () => {
       "renovacao:zoom:2026-11-02",
       "redundancia:meetings:loom,meet,zoom",
     ]);
+  });
+});
+
+describe("currentAlerts com a antecedência da empresa", () => {
+  it("avisa só o que cabe na antecedência escolhida", () => {
+    const empresa3dias: Organization = {
+      id: "org-1",
+      name: "Empresa",
+      createdAt: "2026-01-01T12:00:00.000Z",
+      defaultCurrency: "BRL",
+      brlPerUsd: 5.4,
+      renewalLeadDays: 3,
+      alertChannels: { email: true, whatsapp: false },
+    };
+    const alertas = currentAlerts([assinatura("em-3", "2026-10-02"), assinatura("em-5", "2026-10-04")], empresa3dias, hoje);
+    expect(alertas.map((alerta) => alerta.key)).toEqual(["renovacao:em-3:2026-10-02"]);
   });
 });
