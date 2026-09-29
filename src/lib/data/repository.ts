@@ -1,6 +1,12 @@
 import { DEFAULT_BRL_PER_USD } from "@/lib/domain/billing";
 import type { AlertDismissal, IsoDate, Membership, Organization, Role, Subscription, User } from "@/lib/domain/types";
-import { validateSubscriptionDraft, type FieldErrors, type SubscriptionDraft } from "@/lib/domain/validation";
+import {
+  validateOrganizationDraft,
+  validateSubscriptionDraft,
+  type FieldErrors,
+  type OrganizationDraft,
+  type SubscriptionDraft,
+} from "@/lib/domain/validation";
 import { createDemoData } from "./seed";
 
 /**
@@ -197,6 +203,34 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
      * Empresa nova para quem está na sessão: em real, com a cotação inicial, vínculo de administração —
      * e a sessão passa para ela.
      */
+    /**
+     * Nome, moeda padrão e cotação da empresa. Só quem a administra muda: a tela desabilita o
+     * formulário para os outros, e esta é a regra.
+     */
+    updateOrganization(organizationId: string, draft: OrganizationDraft): Organization {
+      const database = getDatabase();
+      const current = database.organizations.find((organization) => organization.id === organizationId);
+      if (!current) throw new Error("Empresa não encontrada.");
+      const { session } = database;
+      const admin = database.memberships.some(
+        (m) => m.userId === session?.userId && m.organizationId === organizationId && m.role === "admin",
+      );
+      if (!admin) throw new Error("Só quem administra a empresa altera estes dados.");
+      const errors = validateOrganizationDraft(draft);
+      if (Object.keys(errors).length > 0) throw new ValidationError<OrganizationDraft>(errors);
+      const updated: Organization = {
+        ...current,
+        name: draft.name.trim(),
+        defaultCurrency: draft.defaultCurrency,
+        brlPerUsd: draft.brlPerUsd,
+      };
+      commit({
+        ...database,
+        organizations: database.organizations.map((organization) => (organization.id === organizationId ? updated : organization)),
+      });
+      return updated;
+    },
+
     addOrganization(name: string, now = new Date()): Organization {
       const database = getDatabase();
       const { session } = database;

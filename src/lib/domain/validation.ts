@@ -5,6 +5,8 @@ import {
   CURRENCIES,
   SUBSCRIPTION_SOURCES,
   SUBSCRIPTION_STATUSES,
+  type Currency,
+  type Organization,
   type Subscription,
 } from "./types";
 
@@ -89,5 +91,23 @@ export function validateAccountDraft(draft: AccountDraft): FieldErrors<AccountDr
   }
   if (draft.password.length < 8) errors.password = "A senha precisa de pelo menos 8 caracteres.";
   if (!draft.organizationName.trim()) errors.organizationName = "Informe o nome da empresa.";
+  return errors;
+}
+
+/** O que a tela de configurações muda na empresa. */
+export type OrganizationDraft = Pick<Organization, "name" | "defaultCurrency" | "brlPerUsd">;
+
+/** Teto de sanidade da cotação: pega o "540" digitado sem a vírgula, que multiplicaria o dólar por 100. */
+export const BRL_PER_USD_MAX = 100;
+
+export function validateOrganizationDraft(draft: OrganizationDraft): FieldErrors<OrganizationDraft> {
+  const errors: FieldErrors<OrganizationDraft> = {};
+  if (!draft.name.trim()) errors.name = "Informe o nome da empresa.";
+  if (!(CURRENCIES as readonly Currency[]).includes(draft.defaultCurrency)) {
+    errors.defaultCurrency = "Escolha a moeda padrão.";
+  }
+  if (!Number.isFinite(draft.brlPerUsd) || draft.brlPerUsd <= 0 || draft.brlPerUsd > BRL_PER_USD_MAX) {
+    errors.brlPerUsd = "Informe quantos reais vale um dólar, entre R$ 0,01 e R$ 100,00.";
+  }
   return errors;
 }

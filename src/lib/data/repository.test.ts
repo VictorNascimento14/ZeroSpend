@@ -167,6 +167,27 @@ describe("escrita", () => {
   });
 });
 
+describe("dados da empresa", () => {
+  const dados = { name: "  Exemplo Tecnologia S.A.  ", defaultCurrency: "USD" as const, brlPerUsd: 5.1 };
+
+  it("muda nome (aparado), moeda e cotação para quem administra", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    repositorio.startSession(DEMO_USER_ID);
+    const mudada = repositorio.updateOrganization(empresa, dados);
+    expect(mudada).toMatchObject({ id: empresa, name: "Exemplo Tecnologia S.A.", defaultCurrency: "USD", brlPerUsd: 5.1 });
+    expect(repositorio.getDatabase().organizations.find((o) => o.id === empresa)).toEqual(mudada);
+  });
+
+  it("recusa quem não administra, dado inválido e empresa que não existe, sem gravar", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    expect(() => repositorio.updateOrganization(empresa, dados)).toThrow("Só quem administra a empresa altera estes dados.");
+    repositorio.startSession(DEMO_USER_ID);
+    expect(() => repositorio.updateOrganization(empresa, { ...dados, brlPerUsd: 0 })).toThrow(ValidationError);
+    expect(() => repositorio.updateOrganization("org-que-nao-existe", dados)).toThrow("Empresa não encontrada.");
+    expect(repositorio.getDatabase().organizations.find((o) => o.id === empresa)?.name).toBe("Exemplo Tecnologia Ltda");
+  });
+});
+
 describe("alertas dispensados", () => {
   it("dispensa uma vez só, com a data, e volta a mostrar", () => {
     const repositorio = createRepository(memoria(), hoje);

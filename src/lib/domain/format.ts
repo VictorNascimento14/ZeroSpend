@@ -38,6 +38,11 @@ export function formatList(items: string[]): string {
   return listFormatter.format(items);
 }
 
+export const CURRENCY_LABELS: Record<Currency, string> = {
+  BRL: "Real (R$)",
+  USD: "Dólar (US$)",
+};
+
 export const BILLING_CYCLE_LABELS: Record<BillingCycle, string> = {
   monthly: "Mensal",
   annually: "Anual",

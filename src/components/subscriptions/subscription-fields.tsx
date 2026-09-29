@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORIES, CATEGORY_IDS } from "@/lib/domain/categories";
-import { BILLING_CYCLE_LABELS, STATUS_LABELS } from "@/lib/domain/format";
+import { BILLING_CYCLE_LABELS, CURRENCY_LABELS, STATUS_LABELS } from "@/lib/domain/format";
 import { BILLING_CYCLES, CURRENCIES, SUBSCRIPTION_STATUSES, type Currency } from "@/lib/domain/types";
 import { OWNER_MAX } from "@/lib/domain/validation";
 import type { FieldErrors, SubscriptionDraft } from "@/lib/domain/validation";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_ITEMS = CATEGORY_IDS.map((id) => ({ value: id, label: CATEGORIES[id] }));
-const CURRENCY_ITEMS = CURRENCIES.map((code) => ({ value: code, label: code === "BRL" ? "Real (R$)" : "Dólar (US$)" }));
+const CURRENCY_ITEMS = CURRENCIES.map((code) => ({ value: code, label: CURRENCY_LABELS[code] }));
 const CYCLE_ITEMS = BILLING_CYCLES.map((cycle) => ({ value: cycle, label: BILLING_CYCLE_LABELS[cycle] }));
 const STATUS_ITEMS = SUBSCRIPTION_STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] }));
 
