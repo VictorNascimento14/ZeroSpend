@@ -1,1 +1,209 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tokens do kit do Figma "SaaS Design System & UI Kit (Community)". Transcrição e contrastes na
+ * nota `linguagem-visual` do cofre; a decisão é a ADR-002.
+ *
+ * Só existem as cores do kit: a paleta padrão do Tailwind é zerada, e `bg-slate-50` não gera CSS.
+ * Cada família tem quatro tints (mais claros), a base e três shades (mais escuros), com o nome do kit.
+ */
+@theme {
+  --color-*: initial;
+  --color-white: #fff;
+  --color-black: #000;
+
+  --color-cerulean-tint-50: #e5f0fd;
+  --color-cerulean-tint-100: #bfd9fa;
+  --color-cerulean-tint-200: #80b4f4;
+  --color-cerulean-tint-300: #408eef;
+  --color-cerulean: #0068e9;
+  --color-cerulean-shade-100: #0053ba;
+  --color-cerulean-shade-200: #003e8c;
+  --color-cerulean-shade-300: #002a5d;
+
+  --color-raspberry-tint-50: #fce3ee;
+  --color-raspberry-tint-100: #f9bfd8;
+  --color-raspberry-tint-200: #f380b1;
+  --color-raspberry-tint-300: #ec408a;
+  --color-raspberry: #e60063;
+  --color-raspberry-shade-100: #bb0051;
+  --color-raspberry-shade-200: #90003e;
+  --color-raspberry-shade-300: #65002c;
+
+  --color-plum-tint-50: #efe9f0;
+  --color-plum-tint-100: #d6c8da;
+  --color-plum-tint-200: #bea8c4;
+  --color-plum-tint-300: #a889af;
+  --color-plum: #7c4e87;
+  --color-plum-shade-100: #633e6c;
+  --color-plum-shade-200: #4a2f51;
+  --color-plum-shade-300: #321f36;
+
+  --color-success-tint-50: #dcf9ed;
+  --color-success-tint-100: #a8f1d2;
+  --color-success-tint-200: #6edfaf;
+  --color-success-tint-300: #33cc8c;
+  --color-success: #00bf6f;
+  --color-success-shade-100: #009959;
+  --color-success-shade-200: #007343;
+  --color-success-shade-300: #004c2c;
+
+  --color-warning-tint-50: #fff0df;
+  --color-warning-tint-100: #ffe1bf;
+  --color-warning-tint-200: #ffc480;
+  --color-warning-tint-300: #ffa640;
+  --color-warning: #ff8800;
+  --color-warning-shade-100: #da7400;
+  --color-warning-shade-200: #b66100;
+  --color-warning-shade-300: #914d00;
+
+  --color-danger-tint-50: #ffe7ea;
+  --color-danger-tint-100: #ffb7bf;
+  --color-danger-tint-200: #ff8894;
+  --color-danger-tint-300: #ff4c5e;
+  --color-danger: #ff1028;
+  --color-danger-shade-100: #d50d21;
+  --color-danger-shade-200: #aa0b1b;
+  --color-danger-shade-300: #800814;
+
+  --color-grey-50: #f3f3f4;
+  --color-grey-100: #e2e2e5;
+  --color-grey-200: #c5c5cb;
+  --color-grey-300: #a9a8b1;
+  --color-grey-400: #8c8a96;
+  --color-grey-500: #6f6d7c;
+  --color-grey-600: #525062;
+  --color-grey-700: #3e3c4a;
+  --color-grey-800: #292831;
+  --color-grey-900: #151419;
+
+  /* Cantos do kit: 4 · 8 (botão e campo) · 12 (cartão) · 16. O kit não tem 6px, então `md` é 4. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  /* Elevação do kit, de X-Small a Large. As sombras padrão do Tailwind saem. */
+  --shadow-*: initial;
+  --shadow-xs: 0 0 4px rgb(0 0 0 / 0.15);
+  --shadow-sm: 0 1px 6px rgb(0 0 0 / 0.15);
+  --shadow-md: 1.5px 2px 8px rgb(0 0 0 / 0.1), -1px 0 8px rgb(0 0 0 / 0.1);
+  --shadow-lg: 2.25px 3px 10px rgb(0 0 0 / 0.1), -2px -1px 12px rgb(0 0 0 / 0.1);
+
+  /*
+   * Tipografia do kit: corpo a 145%; títulos H1–H4 com tamanho, peso e tracking numa classe só
+   * (`text-h1`…`text-h4`). A altura de linha dos títulos não está no kit.
+   */
+  --text-xs--line-height: 1.45;
+  --text-sm--line-height: 1.45;
+  --text-base--line-height: 1.45;
+  --text-h1: 3rem;
+  --text-h1--line-height: 1.2;
+  --text-h1--letter-spacing: -0.015em;
+  --text-h1--font-weight: 800;
+  --text-h2: 2.5rem;
+  --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.0125em;
+  --text-h2--font-weight: 700;
+  --text-h3: 2rem;
+  --text-h3--line-height: 1.25;
+  --text-h3--letter-spacing: -0.0025em;
+  --text-h3--font-weight: 700;
+  --text-h4: 1.5rem;
+  --text-h4--line-height: 1.3;
+  --text-h4--letter-spacing: -0.0025em;
+  --text-h4--font-weight: 700;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-inter);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/*
+ * Tokens semânticos do shadcn apontando para o kit. Superfície, texto e borda usam estes, que já
+ * trocam no modo escuro. `background` é o fundo da página; cartão, menu e modal são `card` e
+ * `popover`. O kit não tem modo escuro: o daqui é derivado da escala de cinza dele (ADR-002).
+ */
+:root {
+  --radius: 0.5rem;
+  --background: var(--color-grey-50);
+  --foreground: var(--color-grey-900);
+  --card: var(--color-white);
+  --card-foreground: var(--color-grey-900);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-grey-900);
+  --primary: var(--color-cerulean);
+  --primary-foreground: var(--color-white);
+  --secondary: var(--color-grey-100);
+  --secondary-foreground: var(--color-grey-900);
+  --muted: var(--color-grey-50);
+  --muted-foreground: var(--color-grey-500);
+  --accent: var(--color-grey-100);
+  --accent-foreground: var(--color-grey-900);
+  /* shade-200, não shade-100: o botão destrutivo pinta o fundo com a própria cor a 10%, e sobre o
+     fundo da página o shade-100 dá 4,10:1 — abaixo do AA. */
+  --destructive: var(--color-danger-shade-200);
+  --border: var(--color-grey-100);
+  /* Borda do campo como no kit: 2,35:1 contra o branco, abaixo dos 3:1 do WCAG 1.4.11. Se a
+     acessibilidade pedir, a troca é grey-400 (3,39:1), só aqui. */
+  --input: var(--color-grey-300);
+  --ring: var(--color-cerulean);
+}
+
+.dark {
+  --background: var(--color-grey-900);
+  --foreground: var(--color-grey-50);
+  --card: var(--color-grey-800);
+  --card-foreground: var(--color-grey-50);
+  --popover: var(--color-grey-800);
+  --popover-foreground: var(--color-grey-50);
+  --primary: var(--color-cerulean-tint-200);
+  --primary-foreground: var(--color-grey-900);
+  --secondary: var(--color-grey-700);
+  --secondary-foreground: var(--color-grey-50);
+  --muted: var(--color-grey-700);
+  --muted-foreground: var(--color-grey-300);
+  --accent: var(--color-grey-700);
+  --accent-foreground: var(--color-grey-50);
+  --destructive: var(--color-danger-tint-100);
+  --border: var(--color-grey-700);
+  --input: var(--color-grey-600);
+  --ring: var(--color-cerulean-tint-200);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground;
+    line-height: 1.45;
+  }
+}
