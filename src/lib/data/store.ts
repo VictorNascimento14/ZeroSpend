@@ -1,6 +1,13 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { toIsoDate } from "@/lib/domain/dates";
-import { createRepository, STORAGE_KEY, type Database, type Repository } from "./repository";
+import {
+  createRepository,
+  currentSession,
+  STORAGE_KEY,
+  type CurrentSession,
+  type Database,
+  type Repository,
+} from "./repository";
 
 let repository: Repository | undefined;
 
@@ -28,4 +35,10 @@ const getServerSnapshot = () => null;
  */
 export function useDatabase(): Database | null {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+/** A sessão resolvida (pessoa, empresa atual, papel). `null` sem sessão — e também no servidor. */
+export function useSession(): CurrentSession | null {
+  const database = useDatabase();
+  return useMemo(() => (database ? currentSession(database) : null), [database]);
 }

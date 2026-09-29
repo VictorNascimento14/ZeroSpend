@@ -1,5 +1,5 @@
 import { addDays } from "@/lib/domain/dates";
-import type { IsoDate, Organization, Subscription } from "@/lib/domain/types";
+import type { IsoDate, Membership, Organization, Subscription, User } from "@/lib/domain/types";
 
 /**
  * A conta de demonstração — tudo fictício (regra de sigilo do cofre); nome de fornecedor é nome
@@ -13,6 +13,15 @@ export const DEMO_ORGANIZATION_IDS = {
   tecnologia: "org-exemplo-tecnologia",
   clinica: "org-clinica-exemplo",
 } as const;
+
+export const DEMO_USER_ID = "user-admin-exemplo";
+
+/** A conta de demonstração: admin@zerospend.app, senha "demonstracao" (aparece na tela de entrar). */
+export const DEMO_CREDENTIALS = { email: "admin@zerospend.app", password: "demonstracao" } as const;
+
+// PBKDF2 de "demonstracao" com o sal fixo "ZEROSPEND-DEMO-1" (em hex). O teste confere que batem.
+const DEMO_PASSWORD_SALT = "5a45524f5350454e442d44454d4f2d31";
+const DEMO_PASSWORD_HASH = "66d4fb92b4e06c72cebd792173527438e3ff413d016776d10fb2e494b70b503a";
 
 interface DemoSubscription extends Omit<Subscription, "id" | "organizationId" | "nextBillingDate"> {
   /** Dias entre `today` e a próxima cobrança. */
@@ -44,7 +53,14 @@ const CLINICA: DemoSubscription[] = [
   { vendorName: "Conta Azul", category: "finance", amount: 129, currency: "BRL", billingCycle: "monthly", inDays: 11, status: "active", source: "csv_upload" },
 ];
 
-export function createDemoData(today: IsoDate): { organizations: Organization[]; subscriptions: Subscription[] } {
+export interface DemoData {
+  organizations: Organization[];
+  subscriptions: Subscription[];
+  users: User[];
+  memberships: Membership[];
+}
+
+export function createDemoData(today: IsoDate): DemoData {
   const createdAt = `${addDays(today, -90)}T12:00:00.000Z`;
   return {
     organizations: [
@@ -54,6 +70,20 @@ export function createDemoData(today: IsoDate): { organizations: Organization[];
     subscriptions: [
       ...toSubscriptions(DEMO_ORGANIZATION_IDS.tecnologia, TECNOLOGIA, today),
       ...toSubscriptions(DEMO_ORGANIZATION_IDS.clinica, CLINICA, today),
+    ],
+    users: [
+      {
+        id: DEMO_USER_ID,
+        name: "Admin Exemplo",
+        email: DEMO_CREDENTIALS.email,
+        passwordHash: DEMO_PASSWORD_HASH,
+        passwordSalt: DEMO_PASSWORD_SALT,
+      },
+    ],
+    // O BPO do briefing: a mesma pessoa administra as duas empresas.
+    memberships: [
+      { userId: DEMO_USER_ID, organizationId: DEMO_ORGANIZATION_IDS.tecnologia, role: "admin" },
+      { userId: DEMO_USER_ID, organizationId: DEMO_ORGANIZATION_IDS.clinica, role: "admin" },
     ],
   };
 }

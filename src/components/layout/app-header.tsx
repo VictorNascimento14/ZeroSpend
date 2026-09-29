@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Brand } from "./brand";
 import { NavLinks } from "./nav-links";
 import { ThemeToggle } from "./theme-toggle";
+import { UserMenu } from "./user-menu";
 
 export function AppHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -29,6 +30,7 @@ export function AppHeader() {
       </Sheet>
       <div className="ml-auto flex items-center gap-1">
         <ThemeToggle />
+        <UserMenu />
       </div>
     </header>
   );
