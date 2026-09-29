@@ -6,6 +6,16 @@ import type { IsoDate, Organization, Subscription } from "./types";
 /** A antecedência da especificação: avisar 7 dias antes da renovação. */
 export const DEFAULT_RENEWAL_LEAD_DAYS = 7;
 
+/** As antecedências que a empresa pode escolher. 60 dias dá tempo de renegociar um plano anual. */
+export const RENEWAL_LEAD_OPTIONS = [3, 7, 15, 30, 60] as const;
+
+export type AlertSettings = Pick<Organization, "renewalLeadDays" | "alertChannels">;
+
+/** As preferências de alerta de uma empresa nova — e de uma gravada antes de elas existirem. */
+export function defaultAlertSettings(): AlertSettings {
+  return { renewalLeadDays: DEFAULT_RENEWAL_LEAD_DAYS, alertChannels: { email: true, whatsapp: false } };
+}
+
 export interface RenewalAlert {
   subscription: Subscription;
   /** A próxima cobrança efetiva (já avançada, se a data gravada passou). */
@@ -41,19 +51,15 @@ export type Alert =
   | { kind: "redundancy"; key: string; group: RedundancyGroup };
 
 /**
- * Os alertas de agora: as renovações (da mais próxima) e as duplicidades (da maior economia). A chave
+ * Os alertas de agora, com a antecedência da empresa: as renovações (da mais próxima) e as
+ * duplicidades (da maior economia). A chave
  * nomeia a situação, não só a assinatura — a renovação leva a data da cobrança, e a duplicidade, quem
  * está no grupo. Dispensar vale para aquela situação: a cobrança do mês seguinte, ou uma ferramenta
  * nova na categoria, alertam de novo.
  */
-export function currentAlerts(
-  subscriptions: Subscription[],
-  organization: Organization,
-  today: IsoDate,
-  leadDays: number = DEFAULT_RENEWAL_LEAD_DAYS,
-): Alert[] {
+export function currentAlerts(subscriptions: Subscription[], organization: Organization, today: IsoDate): Alert[] {
   return [
-    ...renewalAlerts(subscriptions, today, leadDays).map((alert) => ({
+    ...renewalAlerts(subscriptions, today, organization.renewalLeadDays).map((alert) => ({
       kind: "renewal" as const,
       key: `renovacao:${alert.subscription.id}:${alert.chargeDate}`,
       ...alert,

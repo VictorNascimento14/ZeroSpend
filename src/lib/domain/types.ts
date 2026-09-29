@@ -23,6 +23,11 @@ export type SubscriptionSource = (typeof SUBSCRIPTION_SOURCES)[number];
  */
 export type IsoDate = string;
 
+export interface AlertChannels {
+  email: boolean;
+  whatsapp: boolean;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -32,6 +37,10 @@ export interface Organization {
   defaultCurrency: Currency;
   /** Cotação que a empresa informa: quantos reais vale um dólar. A v1 não busca cotação. */
   brlPerUsd: number;
+  /** Quantos dias antes da cobrança a renovação vira alerta. */
+  renewalLeadDays: number;
+  /** Por onde a empresa quer ser avisada. A v1 guarda a escolha, mas não envia nada. */
+  alertChannels: AlertChannels;
 }
 
 export interface Subscription {

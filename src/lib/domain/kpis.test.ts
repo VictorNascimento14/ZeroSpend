@@ -8,6 +8,8 @@ const empresa: Organization = {
   createdAt: "2026-09-01T12:00:00.000Z",
   defaultCurrency: "BRL",
   brlPerUsd: 5,
+  renewalLeadDays: 7,
+  alertChannels: { email: true, whatsapp: false },
 };
 
 function assinatura(vendorName: string, campos: Partial<Subscription> = {}): Subscription {
@@ -53,6 +55,15 @@ describe("computeKpis", () => {
   it("não marca conversão quando tudo está na moeda da empresa, nem conta a cancelada em outra moeda", () => {
     const kpis = computeKpis([assinatura("A"), assinatura("B", { currency: "USD", status: "cancelled" })], empresa, "2026-09-29");
     expect(kpis.convertedCurrency).toBe(false);
+  });
+
+  it("conta as renovações pela antecedência da empresa", () => {
+    const perto = assinatura("Perto", { nextBillingDate: "2026-10-01" });
+    const longe = assinatura("Longe", { nextBillingDate: "2026-10-20" });
+    expect(computeKpis([perto, longe], empresa, "2026-09-29")).toMatchObject({ leadDays: 7, renewals: [{ subscription: perto }] });
+    const com30 = computeKpis([perto, longe], { ...empresa, renewalLeadDays: 30 }, "2026-09-29");
+    expect(com30.leadDays).toBe(30);
+    expect(com30.renewals.map((renovacao) => renovacao.subscription.vendorName)).toEqual(["Perto", "Longe"]);
   });
 
   it("dá zero para empresa sem assinaturas", () => {

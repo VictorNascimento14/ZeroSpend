@@ -8,6 +8,8 @@ const empresa: Organization = {
   createdAt: "2026-09-01T12:00:00.000Z",
   defaultCurrency: "BRL",
   brlPerUsd: 5,
+  renewalLeadDays: 7,
+  alertChannels: { email: true, whatsapp: false },
 };
 
 function assinatura(vendorName: string, campos: Partial<Subscription>): Subscription {

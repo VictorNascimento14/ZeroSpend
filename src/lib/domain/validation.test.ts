@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   validateAccountDraft,
+  validateAlertSettings,
   validateOrganizationDraft,
   validateSubscriptionDraft,
   type SubscriptionDraft,
@@ -98,5 +99,18 @@ describe("validateOrganizationDraft", () => {
     // O "540" digitado sem a vírgula multiplicaria o dólar por 100.
     expect(validateOrganizationDraft({ name: "A", defaultCurrency: "BRL", brlPerUsd: 540 })).toHaveProperty("brlPerUsd");
     expect(validateOrganizationDraft({ name: "A", defaultCurrency: "BRL", brlPerUsd: 0 })).toHaveProperty("brlPerUsd");
+  });
+});
+
+describe("validateAlertSettings", () => {
+  it("aceita uma antecedência da lista e os dois canais", () => {
+    expect(validateAlertSettings({ renewalLeadDays: 30, alertChannels: { email: false, whatsapp: true } })).toEqual({});
+  });
+
+  it("recusa antecedência fora da lista e canais que não são sim ou não", () => {
+    expect(validateAlertSettings({ renewalLeadDays: 10, alertChannels: { email: "sim" as never, whatsapp: false } })).toEqual({
+      renewalLeadDays: "Escolha a antecedência.",
+      alertChannels: "Escolha os canais.",
+    });
   });
 });

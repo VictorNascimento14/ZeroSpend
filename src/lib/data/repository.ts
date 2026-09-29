@@ -1,6 +1,8 @@
+import { defaultAlertSettings, type AlertSettings } from "@/lib/domain/alerts";
 import { DEFAULT_BRL_PER_USD } from "@/lib/domain/billing";
 import type { AlertDismissal, IsoDate, Membership, Organization, Role, Subscription, User } from "@/lib/domain/types";
 import {
+  validateAlertSettings,
   validateOrganizationDraft,
   validateSubscriptionDraft,
   type FieldErrors,
@@ -117,6 +119,28 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
     return created;
   }
 
+  /** A empresa, se quem está na sessão a administra. É a regra de papel das configurações. */
+  function administeredOrganization(organizationId: string): Organization {
+    const database = getDatabase();
+    const current = database.organizations.find((organization) => organization.id === organizationId);
+    if (!current) throw new Error("Empresa não encontrada.");
+    const { session } = database;
+    const admin = database.memberships.some(
+      (m) => m.userId === session?.userId && m.organizationId === organizationId && m.role === "admin",
+    );
+    if (!admin) throw new Error("Só quem administra a empresa altera estes dados.");
+    return current;
+  }
+
+  function replaceOrganization(updated: Organization): Organization {
+    const database = getDatabase();
+    commit({
+      ...database,
+      organizations: database.organizations.map((organization) => (organization.id === updated.id ? updated : organization)),
+    });
+    return updated;
+  }
+
   function findSubscription(id: string): Subscription {
     const found = getDatabase().subscriptions.find((subscription) => subscription.id === id);
     if (!found) throw new Error("Assinatura não encontrada.");
@@ -208,27 +232,27 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
      * formulário para os outros, e esta é a regra.
      */
     updateOrganization(organizationId: string, draft: OrganizationDraft): Organization {
-      const database = getDatabase();
-      const current = database.organizations.find((organization) => organization.id === organizationId);
-      if (!current) throw new Error("Empresa não encontrada.");
-      const { session } = database;
-      const admin = database.memberships.some(
-        (m) => m.userId === session?.userId && m.organizationId === organizationId && m.role === "admin",
-      );
-      if (!admin) throw new Error("Só quem administra a empresa altera estes dados.");
+      const current = administeredOrganization(organizationId);
       const errors = validateOrganizationDraft(draft);
       if (Object.keys(errors).length > 0) throw new ValidationError<OrganizationDraft>(errors);
-      const updated: Organization = {
+      return replaceOrganization({
         ...current,
         name: draft.name.trim(),
         defaultCurrency: draft.defaultCurrency,
         brlPerUsd: draft.brlPerUsd,
-      };
-      commit({
-        ...database,
-        organizations: database.organizations.map((organization) => (organization.id === organizationId ? updated : organization)),
       });
-      return updated;
+    },
+
+    /** Antecedência e canais de alerta da empresa. Mesma regra de papel dos dados da empresa. */
+    updateAlertSettings(organizationId: string, draft: AlertSettings): Organization {
+      const current = administeredOrganization(organizationId);
+      const errors = validateAlertSettings(draft);
+      if (Object.keys(errors).length > 0) throw new ValidationError<AlertSettings>(errors);
+      return replaceOrganization({
+        ...current,
+        renewalLeadDays: draft.renewalLeadDays,
+        alertChannels: { email: draft.alertChannels.email, whatsapp: draft.alertChannels.whatsapp },
+      });
     },
 
     addOrganization(name: string, now = new Date()): Organization {
@@ -242,6 +266,7 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
         createdAt: now.toISOString(),
         defaultCurrency: "BRL",
         brlPerUsd: DEFAULT_BRL_PER_USD,
+        ...defaultAlertSettings(),
       };
       commit({
         ...database,
@@ -341,7 +366,12 @@ function parse(raw: string): Database | null {
       Array.isArray(value.memberships);
     if (!valid) return null;
     // Campo que chegou depois da versão 2 entra com o padrão: o que já estava gravado continua valendo.
-    return { ...(value as Database), dismissals: Array.isArray(value.dismissals) ? value.dismissals : [] };
+    const database = value as Database;
+    return {
+      ...database,
+      organizations: database.organizations.map((organization) => ({ ...defaultAlertSettings(), ...organization })),
+      dismissals: Array.isArray(value.dismissals) ? value.dismissals : [],
+    };
   } catch {
     return null;
   }
