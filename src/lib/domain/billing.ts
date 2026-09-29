@@ -4,6 +4,12 @@ import type { Currency, IsoDate, Organization, Subscription } from "./types";
 // ponytail: dinheiro em `number` (ponto flutuante) basta para somar e mostrar totais com centavos;
 // com backend, o valor vira `numeric` no banco ou centavos inteiros.
 
+/**
+ * Cotação com que uma empresa nova começa (e a da demonstração). É um valor inicial, não cotação do dia:
+ * a empresa ajusta em Configurações, e a tela mostra a cotação usada ao lado do total.
+ */
+export const DEFAULT_BRL_PER_USD = 5.4;
+
 /** Custo por mês na moeda da assinatura: a cobrança mensal, ou a anual dividida por 12. */
 export function monthlyAmount(subscription: Subscription): number {
   return subscription.billingCycle === "annually" ? subscription.amount / 12 : subscription.amount;

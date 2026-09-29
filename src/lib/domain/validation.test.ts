@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateSubscriptionDraft, type SubscriptionDraft } from "./validation";
+import { validateAccountDraft, validateSubscriptionDraft, type SubscriptionDraft } from "./validation";
 
 const valido: SubscriptionDraft = {
   vendorName: "Slack",
@@ -41,5 +41,35 @@ describe("validateSubscriptionDraft", () => {
     const torto = { ...valido, category: "vendas", currency: "EUR", status: "paused", vendorName: undefined };
     const erros = validateSubscriptionDraft(torto as unknown as SubscriptionDraft);
     expect(Object.keys(erros).sort()).toEqual(["category", "currency", "status", "vendorName"]);
+  });
+});
+
+describe("validateAccountDraft", () => {
+  const conta = {
+    name: "Pessoa Exemplo",
+    email: "pessoa@exemplotecnologia.com.br",
+    password: "senha-de-teste",
+    organizationName: "Exemplo Tecnologia Ltda",
+  };
+
+  it("aceita uma conta com e-mail corporativo", () => {
+    expect(validateAccountDraft(conta)).toEqual({});
+  });
+
+  it("recusa e-mail pessoal, com a explicação", () => {
+    for (const email of ["pessoa@gmail.com", "pessoa@hotmail.com.br", "pessoa@icloud.com"]) {
+      expect(validateAccountDraft({ ...conta, email }).email).toBe(
+        "Use o e-mail da empresa — Gmail, Outlook e parecidos não valem.",
+      );
+    }
+  });
+
+  it("aponta nome, e-mail torto, senha curta e empresa vazia", () => {
+    expect(validateAccountDraft({ name: " ", email: "pessoa@", password: "curta", organizationName: "" })).toEqual({
+      name: "Informe seu nome.",
+      email: "Informe um e-mail válido.",
+      password: "A senha precisa de pelo menos 8 caracteres.",
+      organizationName: "Informe o nome da empresa.",
+    });
   });
 });
