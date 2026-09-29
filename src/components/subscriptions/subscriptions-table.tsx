@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useOrganizationData } from "@/lib/data/store";
 import { toIsoDate } from "@/lib/domain/dates";
 import { plural } from "@/lib/domain/format";
+import { NoSubscriptionsYet } from "./no-subscriptions-yet";
 import { buildRows } from "./rows";
 import { SubscriptionRowsTable } from "./subscription-rows-table";
 
@@ -18,17 +19,15 @@ export function SubscriptionsTable() {
     <Card>
       <CardHeader>
         <CardTitle>Assinaturas</CardTitle>
-        <CardDescription>
-          {rows.length > 0
-            ? `${plural(rows.length, "assinatura", "assinaturas")}, da próxima cobrança para a mais distante.`
-            : "Nenhuma assinatura cadastrada nesta empresa. Use \u201cNova assinatura\u201d para cadastrar a primeira."}
-        </CardDescription>
+        {rows.length > 0 && (
+          <CardDescription>
+            {plural(rows.length, "assinatura", "assinaturas")}, da próxima cobrança para a mais distante.
+          </CardDescription>
+        )}
       </CardHeader>
-      {rows.length > 0 && (
-        <CardContent>
-          <SubscriptionRowsTable rows={rows} organization={organization} />
-        </CardContent>
-      )}
+      <CardContent>
+        {rows.length > 0 ? <SubscriptionRowsTable rows={rows} organization={organization} /> : <NoSubscriptionsYet />}
+      </CardContent>
     </Card>
   );
 }

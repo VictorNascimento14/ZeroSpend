@@ -26,9 +26,11 @@ export function SignUpForm() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  // Quem já tem sessão não tem o que fazer aqui. Durante o envio, a sessão nasce no meio do caminho: o
+  // destino é o onboarding, e este efeito não pode passar na frente.
   useEffect(() => {
-    if (database && currentSession(database)) router.replace("/dashboard");
-  }, [database, router]);
+    if (!pending && database && currentSession(database)) router.replace("/dashboard");
+  }, [database, pending, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,7 +46,7 @@ export function SignUpForm() {
         password: read("password"),
         organizationName: read("organizationName"),
       });
-      router.replace("/dashboard");
+      router.replace("/onboarding");
     } catch (reason) {
       if (reason instanceof ValidationError) setErrors(reason.fields as FieldErrors<AccountDraft>);
       else setFailure(reason instanceof Error ? reason.message : "Não foi possível criar a conta.");

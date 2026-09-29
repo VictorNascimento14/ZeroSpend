@@ -10,6 +10,7 @@ import { useOrganizationData } from "@/lib/data/store";
 import { CATEGORIES, CATEGORY_IDS, type Category } from "@/lib/domain/categories";
 import { toIsoDate } from "@/lib/domain/dates";
 import { plural } from "@/lib/domain/format";
+import { NoSubscriptionsYet } from "./no-subscriptions-yet";
 import { buildRows, filterRows, sortRows, type RowFilters, type SortKey, type StatusFilter } from "./rows";
 import { SubscriptionRowsTable } from "./subscription-rows-table";
 
@@ -91,9 +92,7 @@ export function SubscriptionsList({ initialQuery = "" }: { initialQuery?: string
             </Button>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma assinatura cadastrada nesta empresa. Use &ldquo;Nova assinatura&rdquo; para cadastrar a primeira.
-          </p>
+          <NoSubscriptionsYet />
         )}
       </CardContent>
     </Card>
