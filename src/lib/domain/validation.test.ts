@@ -31,6 +31,11 @@ describe("validateSubscriptionDraft", () => {
     });
   });
 
+  it("aceita responsável vazio e recusa um texto longo demais", () => {
+    expect(validateSubscriptionDraft({ ...valido, owner: "" })).toEqual({});
+    expect(validateSubscriptionDraft({ ...valido, owner: "x".repeat(81) }).owner).toBe("Use até 80 caracteres.");
+  });
+
   it("recusa zero, NaN e infinito como valor", () => {
     for (const amount of [0, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(validateSubscriptionDraft({ ...valido, amount }).amount).toBeDefined();

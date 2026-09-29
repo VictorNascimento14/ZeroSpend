@@ -5,26 +5,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORIES, CATEGORY_IDS } from "@/lib/domain/categories";
-import { BILLING_CYCLE_LABELS } from "@/lib/domain/format";
-import { BILLING_CYCLES, CURRENCIES, type Currency } from "@/lib/domain/types";
+import { BILLING_CYCLE_LABELS, STATUS_LABELS } from "@/lib/domain/format";
+import { BILLING_CYCLES, CURRENCIES, SUBSCRIPTION_STATUSES, type Currency } from "@/lib/domain/types";
+import { OWNER_MAX } from "@/lib/domain/validation";
 import type { FieldErrors, SubscriptionDraft } from "@/lib/domain/validation";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_ITEMS = CATEGORY_IDS.map((id) => ({ value: id, label: CATEGORIES[id] }));
 const CURRENCY_ITEMS = CURRENCIES.map((code) => ({ value: code, label: code === "BRL" ? "Real (R$)" : "Dólar (US$)" }));
 const CYCLE_ITEMS = BILLING_CYCLES.map((cycle) => ({ value: cycle, label: BILLING_CYCLE_LABELS[cycle] }));
+const STATUS_ITEMS = SUBSCRIPTION_STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] }));
 
 type Errors = FieldErrors<SubscriptionDraft>;
 
-/** Os campos de uma assinatura — os mesmos no cadastro e na edição. */
+/** Os campos de uma assinatura — os mesmos no cadastro e na edição (que mostra também o status). */
 export function SubscriptionFields({
   defaults,
   defaultCurrency,
   errors,
+  withStatus = false,
 }: {
   defaults?: Partial<SubscriptionDraft>;
   defaultCurrency: Currency;
   errors: Errors;
+  withStatus?: boolean;
 }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -92,13 +96,39 @@ export function SubscriptionFields({
           </SelectContent>
         </Select>
       </Field>
-      <Field name="nextBillingDate" label="Próxima cobrança" errors={errors} className="sm:col-span-2">
+      <Field name="nextBillingDate" label="Próxima cobrança" errors={errors} className={withStatus ? undefined : "sm:col-span-2"}>
         <Input
           id="nextBillingDate"
           name="nextBillingDate"
           type="date"
           defaultValue={defaults?.nextBillingDate}
           {...invalid("nextBillingDate", errors)}
+        />
+      </Field>
+      {withStatus && (
+        <Field name="status" label="Status" errors={errors}>
+          <Select name="status" items={STATUS_ITEMS} defaultValue={defaults?.status ?? "active"}>
+            <SelectTrigger id="status" className="w-full" {...invalid("status", errors)}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_ITEMS.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      )}
+      <Field name="owner" label="Responsável" hint="Opcional. Quem responde por esta ferramenta na empresa." errors={errors} className="sm:col-span-2">
+        <Input
+          id="owner"
+          name="owner"
+          defaultValue={defaults?.owner}
+          maxLength={OWNER_MAX}
+          autoComplete="off"
+          {...invalid("owner", errors, "owner-dica")}
         />
       </Field>
     </div>

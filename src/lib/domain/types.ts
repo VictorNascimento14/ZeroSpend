@@ -46,6 +46,11 @@ export interface Subscription {
   nextBillingDate: IsoDate;
   status: SubscriptionStatus;
   source: SubscriptionSource;
+  /**
+   * Quem responde pela ferramenta na empresa — texto livre, porque nem sempre a pessoa tem conta no
+   * ZeroSpend. A especificação pede "marcar responsável" na tabela, sem dizer o campo.
+   */
+  owner?: string;
 }
 
 export const ROLES = ["admin", "member"] as const;
