@@ -1,4 +1,4 @@
-import type { BillingCycle, Currency, IsoDate, SubscriptionSource, SubscriptionStatus } from "./types";
+import type { BillingCycle, Currency, IsoDate, Role, SubscriptionSource, SubscriptionStatus } from "./types";
 
 const moneyFormatters: Record<Currency, Intl.NumberFormat> = {
   BRL: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }),
@@ -36,6 +36,22 @@ const listFormatter = new Intl.ListFormat("pt-BR", { type: "conjunction" });
 /** "Figma e Canva", "Figma, Canva e Miro". */
 export function formatList(items: string[]): string {
   return listFormatter.format(items);
+}
+
+export const ROLE_LABELS: Record<Role, string> = {
+  admin: "Administração",
+  member: "Membro",
+};
+
+/** "Pessoa Exemplo" → "PE": o avatar de quem não tem foto (e ninguém tem, na v1). */
+export function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 export const CURRENCY_LABELS: Record<Currency, string> = {

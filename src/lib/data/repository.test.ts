@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { defaultAlertSettings } from "@/lib/domain/alerts";
+import type { Organization, User } from "@/lib/domain/types";
 import type { SubscriptionDraft } from "@/lib/domain/validation";
 import { BACKUP_KEY, createRepository, currentSession, STORAGE_KEY, ValidationError } from "./repository";
 import { DEMO_ORGANIZATION_IDS, DEMO_USER_ID } from "./seed";
@@ -47,10 +49,12 @@ describe("leitura", () => {
     createRepository(armazenamento, hoje).addSubscription(empresa, rascunho);
     const gravado = JSON.parse(armazenamento.itens.get(STORAGE_KEY)!);
     delete gravado.dismissals;
+    delete gravado.invitations;
     armazenamento.setItem(STORAGE_KEY, JSON.stringify(gravado));
     const banco = createRepository(armazenamento, hoje).getDatabase();
     expect(banco.subscriptions.some((s) => s.vendorName === "Miro")).toBe(true);
     expect(banco.dismissals).toEqual([]);
+    expect(banco.invitations).toEqual([]);
     expect(armazenamento.itens.has(BACKUP_KEY)).toBe(false);
   });
 
@@ -211,6 +215,58 @@ describe("preferências de alerta", () => {
     expect(repositorio.updateAlertSettings(empresa, preferencias)).toMatchObject(preferencias);
     expect(() => repositorio.updateAlertSettings(empresa, { ...preferencias, renewalLeadDays: 10 })).toThrow(ValidationError);
     expect(repositorio.getDatabase().organizations.find((o) => o.id === empresa)?.renewalLeadDays).toBe(30);
+  });
+});
+
+describe("membros e convites", () => {
+  const pessoa: User = { id: "user-pessoa", name: "Pessoa Exemplo", email: "pessoa@exemplo.com", passwordHash: "h", passwordSalt: "s" };
+  const filial: Organization = {
+    id: "org-filial",
+    name: "Exemplo Filial",
+    createdAt: "2026-09-29T12:00:00.000Z",
+    defaultCurrency: "BRL",
+    brlPerUsd: 5.4,
+    ...defaultAlertSettings(),
+  };
+  const vinculosDaPessoa = (repositorio: ReturnType<typeof createRepository>) =>
+    repositorio.getDatabase().memberships.filter((m) => m.userId === pessoa.id).map((m) => `${m.organizationId}:${m.role}`);
+
+  it("deixa o convite pendente e o aceita quando a pessoa cria a conta com o e-mail", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    repositorio.startSession(DEMO_USER_ID);
+    const resultado = repositorio.inviteMember(empresa, { email: "  Pessoa@Exemplo.com ", role: "member" });
+    expect(resultado).toMatchObject({ kind: "invited", invitation: { email: "pessoa@exemplo.com", role: "member", invitedAt: "2026-09-29" } });
+    expect(() => repositorio.inviteMember(empresa, { email: "pessoa@exemplo.com", role: "admin" })).toThrow(ValidationError);
+    repositorio.addAccount(pessoa, filial);
+    expect(vinculosDaPessoa(repositorio)).toEqual(["org-filial:admin", `${empresa}:member`]);
+    expect(repositorio.getDatabase().invitations).toEqual([]);
+  });
+
+  it("põe na hora quem já tem conta neste navegador, e recusa quem já é da empresa", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    repositorio.addAccount(pessoa, filial);
+    repositorio.startSession(DEMO_USER_ID);
+    expect(repositorio.inviteMember(empresa, { email: "pessoa@exemplo.com", role: "admin" })).toMatchObject({ kind: "added" });
+    expect(vinculosDaPessoa(repositorio)).toContain(`${empresa}:admin`);
+    expect(() => repositorio.inviteMember(empresa, { email: "admin@zerospend.app", role: "member" })).toThrow(ValidationError);
+  });
+
+  it("cancela convite e remove membro, mas ninguém tira o próprio acesso nem mexe sem administrar", () => {
+    const repositorio = createRepository(memoria(), hoje);
+    expect(() => repositorio.inviteMember(empresa, { email: "pessoa@exemplo.com", role: "member" })).toThrow(
+      "Só quem administra a empresa altera estes dados.",
+    );
+    repositorio.addAccount(pessoa, filial);
+    repositorio.startSession(DEMO_USER_ID);
+    repositorio.inviteMember(empresa, { email: "pessoa@exemplo.com", role: "member" });
+    const convite = repositorio.inviteMember(empresa, { email: "outra@exemplo.com", role: "member" });
+    if (convite.kind !== "invited") throw new Error("esperava convite");
+    repositorio.revokeInvitation(convite.invitation.id);
+    expect(repositorio.getDatabase().invitations).toEqual([]);
+    expect(() => repositorio.removeMember(empresa, DEMO_USER_ID)).toThrow("Você não pode tirar o próprio acesso.");
+    repositorio.removeMember(empresa, pessoa.id);
+    expect(vinculosDaPessoa(repositorio)).toEqual(["org-filial:admin"]);
+    expect(() => repositorio.removeMember(empresa, pessoa.id)).toThrow("Esta pessoa não faz parte da empresa.");
   });
 });
 

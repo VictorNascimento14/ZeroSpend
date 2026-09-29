@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   validateAccountDraft,
   validateAlertSettings,
+  validateInviteDraft,
   validateOrganizationDraft,
   validateSubscriptionDraft,
   type SubscriptionDraft,
@@ -112,5 +113,19 @@ describe("validateAlertSettings", () => {
       renewalLeadDays: "Escolha a antecedência.",
       alertChannels: "Escolha os canais.",
     });
+  });
+});
+
+describe("validateInviteDraft", () => {
+  it("aceita e-mail da empresa e papel conhecido", () => {
+    expect(validateInviteDraft({ email: "pessoa@exemplo.com", role: "member" })).toEqual({});
+  });
+
+  it("recusa e-mail pessoal ou inválido e papel desconhecido, como na conta", () => {
+    expect(validateInviteDraft({ email: "alguem@gmail.com", role: "dono" as never })).toEqual({
+      email: "Use o e-mail da empresa — Gmail, Outlook e parecidos não valem.",
+      role: "Escolha o papel.",
+    });
+    expect(validateInviteDraft({ email: "sem-arroba", role: "admin" })).toEqual({ email: "Informe um e-mail válido." });
   });
 });

@@ -1,20 +1,18 @@
 import { defaultAlertSettings } from "@/lib/domain/alerts";
 import { DEFAULT_BRL_PER_USD } from "@/lib/domain/billing";
+import { normalizeEmail } from "@/lib/domain/text";
 import type { Organization, User } from "@/lib/domain/types";
 import { validateAccountDraft, type AccountDraft } from "@/lib/domain/validation";
 import { hashPassword, newSalt } from "./password";
 import { EMAIL_TAKEN, newId, ValidationError, type Repository, type Session } from "./repository";
+
+export { normalizeEmail };
 
 export class SignInError extends Error {
   constructor() {
     super("E-mail ou senha incorretos.");
     this.name = "SignInError";
   }
-}
-
-/** E-mail como chave de entrada: sem espaços nas pontas e em minúsculas. */
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
 }
 
 /**
