@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Brand } from "./brand";
 import { NavLinks } from "./nav-links";
+import { OrganizationSwitcher } from "./organization-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 
@@ -28,7 +29,8 @@ export function AppHeader() {
           </div>
         </SheetContent>
       </Sheet>
-      <div className="ml-auto flex items-center gap-1">
+      <OrganizationSwitcher />
+      <div className="ml-auto flex shrink-0 items-center gap-1">
         <ThemeToggle />
         <UserMenu />
       </div>

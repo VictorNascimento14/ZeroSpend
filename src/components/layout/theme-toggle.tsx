@@ -26,15 +26,15 @@ export function ThemeToggle() {
         <DropdownMenuGroup>
           <DropdownMenuLabel>Tema</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(String(value))}>
-            <DropdownMenuRadioItem value="light">
+            <DropdownMenuRadioItem value="light" closeOnClick>
               <Sun />
               Claro
             </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="dark">
+            <DropdownMenuRadioItem value="dark" closeOnClick>
               <Moon />
               Escuro
             </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="system">
+            <DropdownMenuRadioItem value="system" closeOnClick>
               <Monitor />
               Sistema
             </DropdownMenuRadioItem>
