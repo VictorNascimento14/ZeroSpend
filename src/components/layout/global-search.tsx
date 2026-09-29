@@ -14,12 +14,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { normalize } from "@/components/subscriptions/rows";
 import { VendorAvatar } from "@/components/subscriptions/vendor-avatar";
 import { getRepository, useOrganizationData } from "@/lib/data/store";
 import { monthlyAmountIn } from "@/lib/domain/billing";
 import { CATEGORIES } from "@/lib/domain/categories";
 import { formatMoney } from "@/lib/domain/format";
+import { normalizeText as normalize } from "@/lib/domain/text";
 import { NAV_ITEMS } from "./navigation";
 
 /**
