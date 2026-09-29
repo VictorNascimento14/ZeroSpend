@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { toIsoDate } from "@/lib/domain/dates";
-import type { Subscription } from "@/lib/domain/types";
+import type { Invitation, Role, Subscription, User } from "@/lib/domain/types";
 import {
   createRepository,
   currentSession,
@@ -63,5 +63,30 @@ export function useOrganizationData(): OrganizationData | null {
       database.dismissals.filter((d) => d.organizationId === organizationId).map((d) => d.key),
     );
     return { session, subscriptions, dismissedAlertKeys };
+  }, [database]);
+}
+
+export interface Member {
+  user: Pick<User, "id" | "name" | "email">;
+  role: Role;
+}
+
+/** Quem tem acesso à empresa da sessão (por nome) e os convites pendentes dela. `null` sem sessão. */
+export function useMembers(): { members: Member[]; invitations: Invitation[] } | null {
+  const database = useDatabase();
+  return useMemo(() => {
+    const session = database ? currentSession(database) : null;
+    if (!database || !session) return null;
+    const organizationId = session.organization.id;
+    const members = database.memberships
+      .filter((membership) => membership.organizationId === organizationId)
+      .flatMap((membership) => {
+        const user = database.users.find((candidate) => candidate.id === membership.userId);
+        // Só o que a tela mostra: o hash da senha não sai do repositório.
+        return user ? [{ user: { id: user.id, name: user.name, email: user.email }, role: membership.role }] : [];
+      })
+      .sort((a, b) => a.user.name.localeCompare(b.user.name, "pt-BR"));
+    const invitations = database.invitations.filter((invitation) => invitation.organizationId === organizationId);
+    return { members, invitations };
   }, [database]);
 }

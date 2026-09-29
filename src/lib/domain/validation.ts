@@ -6,8 +6,11 @@ import {
   CURRENCIES,
   SUBSCRIPTION_SOURCES,
   SUBSCRIPTION_STATUSES,
+  ROLES,
   type Currency,
+  type Invitation,
   type Organization,
+  type Role,
   type Subscription,
 } from "./types";
 
@@ -81,15 +84,21 @@ export const PERSONAL_EMAIL_DOMAINS = [
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** A regra do e-mail de conta (e de convite): válido e da empresa. Chega já normalizado. */
+function corporateEmailError(email: string): string | undefined {
+  if (!EMAIL.test(email)) return "Informe um e-mail válido.";
+  if ((PERSONAL_EMAIL_DOMAINS as readonly string[]).includes(email.split("@")[1])) {
+    return "Use o e-mail da empresa — Gmail, Outlook e parecidos não valem.";
+  }
+  return undefined;
+}
+
 /** As regras de uma conta nova. O e-mail chega já normalizado (minúsculo, sem espaço nas pontas). */
 export function validateAccountDraft(draft: AccountDraft): FieldErrors<AccountDraft> {
   const errors: FieldErrors<AccountDraft> = {};
   if (!draft.name.trim()) errors.name = "Informe seu nome.";
-  if (!EMAIL.test(draft.email)) {
-    errors.email = "Informe um e-mail válido.";
-  } else if ((PERSONAL_EMAIL_DOMAINS as readonly string[]).includes(draft.email.split("@")[1])) {
-    errors.email = "Use o e-mail da empresa — Gmail, Outlook e parecidos não valem.";
-  }
+  const emailError = corporateEmailError(draft.email);
+  if (emailError) errors.email = emailError;
   if (draft.password.length < 8) errors.password = "A senha precisa de pelo menos 8 caracteres.";
   if (!draft.organizationName.trim()) errors.organizationName = "Informe o nome da empresa.";
   return errors;
@@ -120,5 +129,17 @@ export function validateAlertSettings(draft: AlertSettings): FieldErrors<AlertSe
   }
   const { email, whatsapp } = draft.alertChannels ?? {};
   if (typeof email !== "boolean" || typeof whatsapp !== "boolean") errors.alertChannels = "Escolha os canais.";
+  return errors;
+}
+
+/** O que a tela manda para convidar alguém. */
+export type InviteDraft = Pick<Invitation, "email" | "role">;
+
+/** O convite segue a regra da conta: só e-mail da empresa, porque só ele consegue criar conta. */
+export function validateInviteDraft(draft: InviteDraft): FieldErrors<InviteDraft> {
+  const errors: FieldErrors<InviteDraft> = {};
+  const emailError = corporateEmailError(draft.email);
+  if (emailError) errors.email = emailError;
+  if (!(ROLES as readonly Role[]).includes(draft.role)) errors.role = "Escolha o papel.";
   return errors;
 }

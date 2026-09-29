@@ -1,11 +1,23 @@
 import { defaultAlertSettings, type AlertSettings } from "@/lib/domain/alerts";
 import { DEFAULT_BRL_PER_USD } from "@/lib/domain/billing";
-import type { AlertDismissal, IsoDate, Membership, Organization, Role, Subscription, User } from "@/lib/domain/types";
+import { normalizeEmail } from "@/lib/domain/text";
+import type {
+  AlertDismissal,
+  Invitation,
+  IsoDate,
+  Membership,
+  Organization,
+  Role,
+  Subscription,
+  User,
+} from "@/lib/domain/types";
 import {
   validateAlertSettings,
+  validateInviteDraft,
   validateOrganizationDraft,
   validateSubscriptionDraft,
   type FieldErrors,
+  type InviteDraft,
   type OrganizationDraft,
   type SubscriptionDraft,
 } from "@/lib/domain/validation";
@@ -28,6 +40,8 @@ export interface Database {
   memberships: Membership[];
   /** Os alertas que cada empresa dispensou. Campo novo com padrão na leitura: falta = nenhum. */
   dismissals: AlertDismissal[];
+  /** Os convites pendentes. Campo novo com padrão na leitura: falta = nenhum. */
+  invitations: Invitation[];
   /** Quem está usando este navegador e em qual empresa. `null` é ninguém. */
   session: Session | null;
 }
@@ -92,7 +106,7 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
       if (parsed) return parsed;
       storage.setItem(BACKUP_KEY, raw);
     }
-    const demo: Database = { version: 2, ...createDemoData(today()), dismissals: [], session: null };
+    const demo: Database = { version: 2, ...createDemoData(today()), dismissals: [], invitations: [], session: null };
     storage.setItem(STORAGE_KEY, JSON.stringify(demo));
     return demo;
   }
@@ -187,11 +201,18 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
         throw new ValidationError<{ email: string }>({ email: EMAIL_TAKEN });
       }
       const session = { userId: user.id, organizationId: organization.id };
+      // Os convites pendentes para este e-mail viram vínculo: a pessoa entra também nessas empresas.
+      const invited = database.invitations.filter((invitation) => invitation.email === user.email);
       commit({
         ...database,
         users: [...database.users, user],
         organizations: [...database.organizations, organization],
-        memberships: [...database.memberships, { userId: user.id, organizationId: organization.id, role: "admin" }],
+        memberships: [
+          ...database.memberships,
+          { userId: user.id, organizationId: organization.id, role: "admin" },
+          ...invited.map((invitation) => ({ userId: user.id, organizationId: invitation.organizationId, role: invitation.role })),
+        ],
+        invitations: database.invitations.filter((invitation) => invitation.email !== user.email),
         session,
       });
       return session;
@@ -295,6 +316,57 @@ export function createRepository(storage: KeyValueStorage, today: () => IsoDate)
     },
 
     /** Devolve a assinatura removida, para quem quiser oferecer "desfazer". */
+    /**
+     * Convida alguém para a empresa. Nesta versão nada é enviado: quem já tem conta neste navegador
+     * entra na hora; quem não tem fica com o convite pendente, aceito ao criar a conta com o e-mail.
+     */
+    inviteMember(
+      organizationId: string,
+      draft: InviteDraft,
+    ): { kind: "added"; user: User } | { kind: "invited"; invitation: Invitation } {
+      administeredOrganization(organizationId);
+      const database = getDatabase();
+      const email = normalizeEmail(draft.email);
+      const errors = validateInviteDraft({ email, role: draft.role });
+      const existing = database.users.find((user) => user.email === email);
+      if (!errors.email) {
+        if (existing && database.memberships.some((m) => m.userId === existing.id && m.organizationId === organizationId)) {
+          errors.email = "Esta pessoa já faz parte da empresa.";
+        } else if (database.invitations.some((i) => i.organizationId === organizationId && i.email === email)) {
+          errors.email = "Já existe um convite para este e-mail.";
+        }
+      }
+      if (Object.keys(errors).length > 0) throw new ValidationError<InviteDraft>(errors);
+      if (existing) {
+        commit({ ...database, memberships: [...database.memberships, { userId: existing.id, organizationId, role: draft.role }] });
+        return { kind: "added", user: existing };
+      }
+      const invitation: Invitation = { id: newId(), organizationId, email, role: draft.role, invitedAt: today() };
+      commit({ ...database, invitations: [...database.invitations, invitation] });
+      return { kind: "invited", invitation };
+    },
+
+    revokeInvitation(invitationId: string): void {
+      const invitation = getDatabase().invitations.find((candidate) => candidate.id === invitationId);
+      if (!invitation) throw new Error("Convite não encontrado.");
+      administeredOrganization(invitation.organizationId);
+      const database = getDatabase();
+      commit({ ...database, invitations: database.invitations.filter((candidate) => candidate.id !== invitationId) });
+    },
+
+    /**
+     * Tira o acesso de alguém à empresa. Ninguém se remove por aqui — assim a empresa nunca fica sem
+     * quem a administre.
+     */
+    removeMember(organizationId: string, userId: string): void {
+      administeredOrganization(organizationId);
+      const database = getDatabase();
+      if (database.session?.userId === userId) throw new Error("Você não pode tirar o próprio acesso.");
+      const memberships = database.memberships.filter((m) => !(m.userId === userId && m.organizationId === organizationId));
+      if (memberships.length === database.memberships.length) throw new Error("Esta pessoa não faz parte da empresa.");
+      commit({ ...database, memberships });
+    },
+
     /** Dispensa um alerta da empresa. Dispensar de novo não muda nada. */
     dismissAlert(organizationId: string, key: string): void {
       const database = getDatabase();
@@ -371,6 +443,7 @@ function parse(raw: string): Database | null {
       ...database,
       organizations: database.organizations.map((organization) => ({ ...defaultAlertSettings(), ...organization })),
       dismissals: Array.isArray(value.dismissals) ? value.dismissals : [],
+      invitations: Array.isArray(value.invitations) ? value.invitations : [],
     };
   } catch {
     return null;

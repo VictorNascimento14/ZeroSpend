@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getRepository, useSession } from "@/lib/data/store";
+import { initials } from "@/lib/domain/format";
 
 /** O avatar do header: quem está usando e o "Sair". A guarda de rota leva para `/entrar` depois. */
 export function UserMenu() {
@@ -43,14 +44,4 @@ export function UserMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
 }

@@ -10,3 +10,8 @@ export function normalizeText(value: string): string {
 export function toWords(value: string): string {
   return normalizeText(value).replace(/[^a-z0-9]+/g, " ").trim();
 }
+
+/** E-mail para comparar e guardar: sem espaço nas pontas e em minúsculas. */
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}

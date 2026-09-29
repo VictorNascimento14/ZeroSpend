@@ -76,6 +76,16 @@ export interface User {
 }
 
 /** Quem acessa qual empresa, e com que papel. Uma pessoa pode cuidar de várias (BPO financeiro). */
+/** Convite pendente: quem criar conta com este e-mail entra na empresa com este papel. */
+export interface Invitation {
+  id: string;
+  organizationId: string;
+  /** Normalizado: minúsculo, sem espaço nas pontas. */
+  email: string;
+  role: Role;
+  invitedAt: IsoDate;
+}
+
 export interface Membership {
   userId: string;
   organizationId: string;
