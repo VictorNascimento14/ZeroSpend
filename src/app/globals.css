@@ -96,28 +96,31 @@
   --shadow-lg: 2.25px 3px 10px rgb(0 0 0 / 0.1), -2px -1px 12px rgb(0 0 0 / 0.1);
 
   /*
-   * Tipografia do kit: corpo a 145%; títulos H1–H4 com tamanho, peso e tracking numa classe só
-   * (`text-h1`…`text-h4`). A altura de linha dos títulos não está no kit.
+   * Tipografia do kit: corpo a 145%; os títulos H1–H4 ocupam os tamanhos padrão do Tailwind, com o
+   * peso e o tracking do kit — H1 `text-5xl` (48px), H2 `text-4xl` (40px), H3 `text-3xl` (32px) e
+   * H4 `text-2xl` (24px). Nome padrão porque os primitivos do shadcn usam o `cn` do pacote, que só
+   * conhece os tamanhos padrão: um `text-h3` próprio seria lido como cor e descartado.
+   * A altura de linha dos títulos não está no kit.
    */
   --text-xs--line-height: 1.45;
   --text-sm--line-height: 1.45;
   --text-base--line-height: 1.45;
-  --text-h1: 3rem;
-  --text-h1--line-height: 1.2;
-  --text-h1--letter-spacing: -0.015em;
-  --text-h1--font-weight: 800;
-  --text-h2: 2.5rem;
-  --text-h2--line-height: 1.2;
-  --text-h2--letter-spacing: -0.0125em;
-  --text-h2--font-weight: 700;
-  --text-h3: 2rem;
-  --text-h3--line-height: 1.25;
-  --text-h3--letter-spacing: -0.0025em;
-  --text-h3--font-weight: 700;
-  --text-h4: 1.5rem;
-  --text-h4--line-height: 1.3;
-  --text-h4--letter-spacing: -0.0025em;
-  --text-h4--font-weight: 700;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.3;
+  --text-2xl--letter-spacing: -0.0025em;
+  --text-2xl--font-weight: 700;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 1.25;
+  --text-3xl--letter-spacing: -0.0025em;
+  --text-3xl--font-weight: 700;
+  --text-4xl: 2.5rem;
+  --text-4xl--line-height: 1.2;
+  --text-4xl--letter-spacing: -0.0125em;
+  --text-4xl--font-weight: 700;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1.2;
+  --text-5xl--letter-spacing: -0.015em;
+  --text-5xl--font-weight: 800;
 }
 
 @theme inline {
