@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EmailConnectCard } from "@/components/integrations/email-connect-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatementImport } from "@/components/onboarding/statement-import";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,8 +21,10 @@ export default function OnboardingPage() {
           </Link>
         }
       />
-      <div className="max-w-3xl">
+      {/* O extrato vem primeiro: é lido de verdade. O e-mail, nesta versão, é demonstração. */}
+      <div className="max-w-3xl space-y-6">
         <StatementImport />
+        <EmailConnectCard />
       </div>
     </div>
   );
