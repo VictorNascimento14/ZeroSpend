@@ -5,7 +5,9 @@ import { SubscriptionsList } from "@/components/subscriptions/subscriptions-list
 
 export const metadata: Metadata = { title: "Assinaturas" };
 
-export default function SubscriptionsPage() {
+export default async function SubscriptionsPage({ searchParams }: PageProps<"/assinaturas">) {
+  const { busca } = await searchParams;
+  const initialQuery = typeof busca === "string" ? busca : "";
   return (
     <div className="space-y-6">
       <PageHeader
@@ -13,7 +15,8 @@ export default function SubscriptionsPage() {
         description="Todas as assinaturas de software da empresa."
         actions={<NewSubscriptionButton />}
       />
-      <SubscriptionsList />
+      {/* A chave recria a lista quando a busca global troca o ?busca= sem sair da página. */}
+      <SubscriptionsList key={initialQuery} initialQuery={initialQuery} />
     </div>
   );
 }

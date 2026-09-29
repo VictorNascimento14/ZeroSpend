@@ -31,10 +31,10 @@ const SORT_ITEMS: { value: SortKey; label: string }[] = [
 ];
 const NO_FILTERS: RowFilters = { query: "", status: "all", category: "all" };
 
-/** A lista completa de assinaturas, com busca, filtros e ordenação. */
-export function SubscriptionsList() {
+/** A lista completa de assinaturas, com busca, filtros e ordenação. `initialQuery` vem do `?busca=`. */
+export function SubscriptionsList({ initialQuery = "" }: { initialQuery?: string }) {
   const data = useOrganizationData();
-  const [filters, setFilters] = useState<RowFilters>(NO_FILTERS);
+  const [filters, setFilters] = useState<RowFilters>({ ...NO_FILTERS, query: initialQuery });
   const [sort, setSort] = useState<SortKey>("nextCharge");
   if (!data) return null;
 
